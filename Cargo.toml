@@ -1,4 +1,6 @@
 [package]
+authors = ["Hyundeok Park <p.hyundeok76@gmail.com>"]
+build = "build.rs"
 name = "pam-network-filter"
 version = "0.1.0"
 edition = "2024"
@@ -8,3 +10,6 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 libc = "0.2.175"
+
+[build-dependencies]
+bindgen = "0.72.0"
