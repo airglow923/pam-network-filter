@@ -2,6 +2,8 @@ mod pam;
 
 use std::ffi::{c_char, c_int};
 
+const NAME: &core::ffi::CStr = c"pam_network_filter";
+
 #[unsafe(no_mangle)]
 pub extern "C" fn pam_sm_authenticate(
     _pamh: *mut pam::pam_handle_t,
@@ -21,3 +23,17 @@ pub extern "C" fn pam_sm_setcred(
 ) -> c_int {
     pam::PAM_SUCCESS
 }
+
+// PAM no longer supports static libraries
+// https://github.com/linux-pam/linux-pam/commit/a684595c0bbd88df71285f43fb27630e3829121e
+#[allow(non_upper_case_globals)]
+#[unsafe(no_mangle)]
+pub static mut _pam_listfile_modstruct: pam::pam_module = pam::pam_module {
+    name: NAME.as_ptr(),
+    pam_sm_authenticate: Some(pam_sm_authenticate),
+    pam_sm_setcred: Some(pam_sm_setcred),
+    pam_sm_acct_mgmt: None,
+    pam_sm_open_session: None,
+    pam_sm_close_session: None,
+    pam_sm_chauthtok: None,
+};
