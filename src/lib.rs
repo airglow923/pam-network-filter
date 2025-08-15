@@ -1,7 +1,6 @@
 mod pam;
 
-use std::ffi::c_char;
-use std::ffi::c_int;
+use std::ffi::{c_char, c_int};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pam_sm_authenticate(
@@ -20,5 +19,5 @@ pub extern "C" fn pam_sm_setcred(
     _argc: c_int,
     _argv: *const *const c_char,
 ) -> c_int {
-    0
+    pam::PAM_SUCCESS
 }
