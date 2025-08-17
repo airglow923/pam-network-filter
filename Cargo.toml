@@ -8,6 +8,9 @@ edition = "2024"
 [lib]
 crate-type = ["rlib", "cdylib", "staticlib"]
 
+[profile.release]
+lto = true
+
 [dependencies]
 libc = "0.2.175"
 
