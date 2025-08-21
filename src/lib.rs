@@ -1,5 +1,7 @@
-mod pam;
-mod syslog;
+mod ffi;
+mod log;
+
+use ffi::pam;
 
 use std::ffi::{c_char, c_int};
 
@@ -32,10 +34,7 @@ pub extern "C" fn pam_sm_acct_mgmt(
     _argc: c_int,
     _argv: *const *const c_char,
 ) -> c_int {
-    unsafe {
-        pam::pam_syslog(pamh, syslog::LOG_INFO, c"feature not implemented".as_ptr());
-    }
-
+    log::log_unimplemented_pam_function(pamh, "pam_sm_acct_mgmt");
     pam::PAM_IGNORE
 }
 
@@ -46,10 +45,7 @@ pub extern "C" fn pam_sm_open_session(
     _argc: c_int,
     _argv: *const *const c_char,
 ) -> c_int {
-    unsafe {
-        pam::pam_syslog(pamh, syslog::LOG_INFO, c"feature not implemented".as_ptr());
-    }
-
+    log::log_unimplemented_pam_function(pamh, "pam_sm_open_session");
     pam::PAM_IGNORE
 }
 
@@ -60,10 +56,7 @@ pub extern "C" fn pam_sm_close_session(
     _argc: c_int,
     _argv: *const *const c_char,
 ) -> c_int {
-    unsafe {
-        pam::pam_syslog(pamh, syslog::LOG_INFO, c"feature not implemented".as_ptr());
-    }
-
+    log::log_unimplemented_pam_function(pamh, "pam_sm_close_session");
     pam::PAM_IGNORE
 }
 
@@ -74,10 +67,7 @@ pub extern "C" fn pam_sm_chauthtok(
     _argc: c_int,
     _argv: *const *const c_char,
 ) -> c_int {
-    unsafe {
-        pam::pam_syslog(pamh, syslog::LOG_INFO, c"feature not implemented".as_ptr());
-    }
-
+    log::log_unimplemented_pam_function(pamh, "pam_sm_chauthtok");
     pam::PAM_IGNORE
 }
 
