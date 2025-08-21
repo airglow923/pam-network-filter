@@ -19,19 +19,19 @@ TEST(PamListfileModstruct, pam_sm_setcred) {
 }
 
 TEST(PamListfileModstruct, pam_sm_acct_mgmt) {
-  EXPECT_EQ(_pam_listfile_modstruct.pam_sm_acct_mgmt, nullptr);
+  EXPECT_NE(_pam_listfile_modstruct.pam_sm_acct_mgmt, nullptr);
 }
 
 TEST(PamListfileModstruct, pam_sm_open_session) {
-  EXPECT_EQ(_pam_listfile_modstruct.pam_sm_open_session, nullptr);
+  EXPECT_NE(_pam_listfile_modstruct.pam_sm_open_session, nullptr);
 }
 
 TEST(PamListfileModstruct, pam_sm_close_session) {
-  EXPECT_EQ(_pam_listfile_modstruct.pam_sm_close_session, nullptr);
+  EXPECT_NE(_pam_listfile_modstruct.pam_sm_close_session, nullptr);
 }
 
 TEST(PamListfileModstruct, pam_sm_chauthtok) {
-  EXPECT_EQ(_pam_listfile_modstruct.pam_sm_chauthtok, nullptr);
+  EXPECT_NE(_pam_listfile_modstruct.pam_sm_chauthtok, nullptr);
 }
 
 } // namespace

@@ -35,7 +35,7 @@ function(configure_target target)
   endif()
 
   target_link_libraries(
-    ${target} PRIVATE ${COMMON_LINK_FLAGS} GTest::gtest GTest::gtest_main
+    ${target} PRIVATE ${COMMON_LINK_FLAGS} GTest::gtest GTest::gtest_main pam
                       "${PROJECT_LIBRARY_PATH}/${PROJECT_LIBRARY_FILE}")
 
   add_test(NAME "${target}" COMMAND "${target}")

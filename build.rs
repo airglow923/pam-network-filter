@@ -3,19 +3,30 @@ use bindgen;
 use std::env;
 use std::path::PathBuf;
 
-fn main() {
-    println!("cargo:rustc-link-lib=dylib=pam");
-
+fn get_binding_for_header(path: &str) -> bindgen::Bindings {
     let bindings = bindgen::Builder::default()
-        .header("pam.h")
+        .header(path)
         .default_macro_constant_type(bindgen::MacroTypeVariation::Signed)
+        .generate_cstr(true)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Unable to generate bindings");
 
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-
     bindings
-        .write_to_file(out_path.join("bindings.rs"))
+}
+
+fn main() {
+    println!("cargo:rustc-link-lib=dylib=pam");
+
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let ffi_pam = get_binding_for_header("ffi/pam.h");
+    let ffi_syslog = get_binding_for_header("ffi/syslog.h");
+
+    ffi_pam
+        .write_to_file(out_path.join("pam.rs"))
+        .expect("Couldn't write bindings!");
+
+    ffi_syslog
+        .write_to_file(out_path.join("syslog.rs"))
         .expect("Couldn't write bindings!");
 }
