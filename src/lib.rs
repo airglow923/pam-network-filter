@@ -1,11 +1,11 @@
+mod config;
 mod ffi;
 mod log;
+mod parser;
 
 use ffi::pam;
 
 use std::ffi::{c_char, c_int};
-
-const NAME: &core::ffi::CStr = c"pam_network_filter";
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pam_sm_authenticate(
@@ -76,7 +76,7 @@ pub extern "C" fn pam_sm_chauthtok(
 #[allow(non_upper_case_globals)]
 #[unsafe(no_mangle)]
 pub static mut _pam_listfile_modstruct: pam::pam_module = pam::pam_module {
-    name: NAME.as_ptr(),
+    name: config::PAM_MODULE_NAME.as_ptr(),
     pam_sm_authenticate: Some(pam_sm_authenticate),
     pam_sm_setcred: Some(pam_sm_setcred),
     pam_sm_acct_mgmt: Some(pam_sm_acct_mgmt),
