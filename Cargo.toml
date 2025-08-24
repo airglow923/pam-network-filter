@@ -12,6 +12,7 @@ crate-type = ["rlib", "cdylib", "staticlib"]
 lto = true
 
 [dependencies]
+clap = { version = "4.5.45", features = ["derive"] }
 libc = "0.2.175"
 
 [build-dependencies]
