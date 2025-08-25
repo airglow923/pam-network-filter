@@ -3,7 +3,7 @@ use clap::{Parser, error::Error, error::ErrorKind};
 use std::ffi::{CStr, c_char, c_int};
 
 #[derive(Parser, Debug)]
-#[command(version, about)]
+#[command(version, about, arg_required_else_help(true))]
 struct Cli {
     #[arg(long)]
     ip_allow: Vec<String>,
@@ -74,15 +74,14 @@ mod tests {
 
     #[test]
     fn test_process_pam_args_invalid() {
-        const ARGC: c_int = 4;
-        let argv: [*const c_char; ARGC as usize] = [
+        let argv = [
             c"asdf".as_ptr(),
             c"qwer".as_ptr(),
             c"the".as_ptr(),
             c"qerqwe".as_ptr(),
         ];
 
-        let ret = process_pam_args(ARGC, argv.as_ptr());
+        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
 
         assert!(ret.is_err());
         assert_eq!(ret.unwrap_err().kind(), ErrorKind::UnknownArgument);
