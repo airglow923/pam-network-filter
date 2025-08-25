@@ -1,6 +1,8 @@
+use crate::c_utils;
 use crate::config;
+
 use clap::{Parser, error::Error, error::ErrorKind};
-use std::ffi::{CStr, c_char, c_int};
+use std::ffi::{c_char, c_int};
 
 #[derive(Parser, Debug)]
 #[command(version, about, arg_required_else_help(true))]
@@ -30,11 +32,6 @@ struct Cli {
     name_deny: Vec<String>,
 }
 
-fn parse_c_string(s: *const c_char) -> String {
-    let cstr = unsafe { CStr::from_ptr(s) };
-    cstr.to_string_lossy().into_owned()
-}
-
 fn parse_c_args(argc: c_int, argv: *const *const c_char) -> Vec<String> {
     let len = argc as usize;
     let mut ptr = argv;
@@ -46,7 +43,7 @@ fn parse_c_args(argc: c_int, argv: *const *const c_char) -> Vec<String> {
 
     while ptr != end {
         unsafe {
-            vec.push(parse_c_string(*ptr));
+            vec.push(c_utils::parse_c_string(*ptr));
         }
         ptr = ptr.wrapping_add(1);
     }
@@ -120,6 +117,16 @@ mod tests {
     #[test]
     fn test_process_pam_args_ip_allow_value_string() {
         let argv = [c"--ip-allow".as_ptr(), c"asdf".as_ptr()];
+
+        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
+
+        assert!(ret.is_ok());
+        assert_eq!(ret.unwrap().ip_allow[0].as_str(), "asdf");
+    }
+
+    #[test]
+    fn test_process_pam_args_ip_allow_value_string_with_equal() {
+        let argv = [c"--ip-allow=asdf".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
 
