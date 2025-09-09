@@ -3,8 +3,10 @@ use crate::ffi::pam;
 use crate::ffi::syslog;
 use crate::log;
 
+use c_utils::parse_c_string;
 use std::ffi::{c_char, c_int, c_void};
 
+#[derive(Debug)]
 pub struct Connection {
     service: String,
     user: String,
@@ -21,7 +23,10 @@ fn pam_get_err_msg(val: c_int) -> String {
     };
 }
 
-fn pam_get_item_log_err_and_throw(pamh: *mut pam::pam_handle_t, val: c_int) -> Result<(), String> {
+fn pam_get_item_log_err_and_throw(
+    pamh: *const pam::pam_handle_t,
+    val: c_int,
+) -> Result<(), String> {
     let msg = pam_get_err_msg(val);
 
     match val {
@@ -33,42 +38,87 @@ fn pam_get_item_log_err_and_throw(pamh: *mut pam::pam_handle_t, val: c_int) -> R
     Err(msg)
 }
 
-pub fn get_pam_connection(pamh: *mut pam::pam_handle_t) -> Result<Connection, String> {
+pub fn get_pam_connection(pamh: *const pam::pam_handle_t) -> Result<Connection, String> {
+    if pamh.is_null() {
+        return Err("null pamh passed".to_string());
+    }
+
     let mut item: *const c_void = std::ptr::null();
-    let mut ret;
 
-    unsafe {
-        ret = pam::pam_get_item(pamh, pam::PAM_SERVICE, &mut item);
-    }
-
+    let ret = unsafe { pam::pam_get_item(pamh, pam::PAM_SERVICE, &mut item) };
     pam_get_item_log_err_and_throw(pamh, ret)?;
-    let service = item as *const c_char;
+    let service = parse_c_string(item as *const c_char);
 
-    unsafe {
-        ret = pam::pam_get_item(pamh, pam::PAM_USER, &mut item);
-    }
-
+    let ret = unsafe { pam::pam_get_item(pamh, pam::PAM_USER, &mut item) };
     pam_get_item_log_err_and_throw(pamh, ret)?;
-    let user = item as *const c_char;
+    let user = parse_c_string(item as *const c_char);
 
-    unsafe {
-        ret = pam::pam_get_item(pamh, pam::PAM_RUSER, &mut item);
-    }
-
+    let ret = unsafe { pam::pam_get_item(pamh, pam::PAM_RUSER, &mut item) };
     pam_get_item_log_err_and_throw(pamh, ret)?;
-    let ruser = item as *const c_char;
 
-    unsafe {
-        ret = pam::pam_get_item(pamh, pam::PAM_RHOST, &mut item);
-    }
+    let ruser = if item.is_null() {
+        String::new()
+    } else {
+        parse_c_string(item as *const c_char)
+    };
 
+    let ret = unsafe { pam::pam_get_item(pamh, pam::PAM_RHOST, &mut item) };
     pam_get_item_log_err_and_throw(pamh, ret)?;
-    let rhost = item as *const c_char;
+
+    let rhost = if item.is_null() {
+        String::new()
+    } else {
+        parse_c_string(item as *const c_char)
+    };
 
     Ok(Connection {
-        service: c_utils::parse_c_string(service),
-        user: c_utils::parse_c_string(user),
-        ruser: c_utils::parse_c_string(ruser),
-        rhost: c_utils::parse_c_string(rhost),
+        service,
+        user,
+        ruser,
+        rhost,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::config;
+
+    use super::*;
+
+    #[test]
+    fn test_get_pam_connection_success() {
+        let conv: pam::pam_conv = pam::pam_conv::default();
+        let mut pamh: *mut pam::pam_handle_t = std::ptr::null_mut();
+
+        assert_eq!(pamh, std::ptr::null_mut());
+
+        let ret = unsafe {
+            pam::pam_start(
+                config::PAM_MODULE_NAME.as_ptr(),
+                c"doe".as_ptr(),
+                &conv,
+                &mut pamh,
+            )
+        };
+
+        assert_eq!(ret, pam::PAM_SUCCESS);
+        assert_ne!(pamh, std::ptr::null_mut());
+
+        let ret = get_pam_connection(pamh);
+        assert!(ret.is_ok());
+
+        let connection = ret.unwrap();
+
+        assert_eq!(
+            connection.service,
+            config::PAM_MODULE_NAME.to_string_lossy().into_owned()
+        );
+        assert_eq!(connection.user, "doe");
+        assert_eq!(connection.ruser, "");
+        assert_eq!(connection.rhost, "");
+
+        let ret = unsafe { pam::pam_end(pamh, pam::PAM_SUCCESS) };
+
+        assert_eq!(ret, pam::PAM_SUCCESS);
+    }
 }
