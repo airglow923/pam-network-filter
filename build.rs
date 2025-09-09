@@ -7,6 +7,7 @@ fn get_binding_for_header(path: &str) -> bindgen::Bindings {
     let bindings = bindgen::Builder::default()
         .header(path)
         .default_macro_constant_type(bindgen::MacroTypeVariation::Signed)
+        .derive_default(true)
         .generate_cstr(true)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
