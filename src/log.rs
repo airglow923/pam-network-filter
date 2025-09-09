@@ -9,7 +9,7 @@ pub fn syslog(priority: c_int, msg: &str) {
     }
 }
 
-pub fn pam_syslog(pamh: *mut pam::pam_handle_t, priority: c_int, msg: &str) {
+pub fn pam_syslog(pamh: *const pam::pam_handle_t, priority: c_int, msg: &str) {
     unsafe {
         pam::pam_syslog(pamh, priority, msg.as_ptr() as *const c_char);
     }
