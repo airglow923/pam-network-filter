@@ -6,7 +6,7 @@ use std::ffi::{c_char, c_int};
 
 #[derive(Parser, Debug)]
 #[command(version, about, arg_required_else_help(true))]
-struct Cli {
+pub struct Cli {
     #[clap(long, value_delimiter(','))]
     ip_allow: Vec<String>,
 
@@ -51,7 +51,7 @@ fn parse_c_args(argc: c_int, argv: *const *const c_char) -> Vec<String> {
     vec
 }
 
-fn process_pam_args(argc: c_int, argv: *const *const c_char) -> Result<Cli, Error> {
+pub fn process_pam_args(argc: c_int, argv: *const *const c_char) -> Result<Cli, Error> {
     if argc == 0 {
         return Err(Error::raw(
             ErrorKind::MissingRequiredArgument,
@@ -119,9 +119,19 @@ mod tests {
         let argv = [c"--ip-allow".as_ptr(), c"asdf".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
-
         assert!(ret.is_ok());
-        assert_eq!(ret.unwrap().ip_allow[0].as_str(), "asdf");
+
+        let cli = ret.unwrap();
+
+        assert_eq!(cli.ip_allow.len(), 1);
+        assert_eq!(cli.ip_allow[0].as_str(), "asdf");
+        assert_eq!(cli.ip_deny.len(), 0);
+        assert_eq!(cli.mac_allow.len(), 0);
+        assert_eq!(cli.mac_deny.len(), 0);
+        assert_eq!(cli.port_allow.len(), 0);
+        assert_eq!(cli.port_deny.len(), 0);
+        assert_eq!(cli.name_allow.len(), 0);
+        assert_eq!(cli.name_deny.len(), 0);
     }
 
     #[test]
@@ -129,9 +139,19 @@ mod tests {
         let argv = [c"--ip-allow=asdf".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
-
         assert!(ret.is_ok());
-        assert_eq!(ret.unwrap().ip_allow[0].as_str(), "asdf");
+
+        let cli = ret.unwrap();
+
+        assert_eq!(cli.ip_allow.len(), 1);
+        assert_eq!(cli.ip_allow[0].as_str(), "asdf");
+        assert_eq!(cli.ip_deny.len(), 0);
+        assert_eq!(cli.mac_allow.len(), 0);
+        assert_eq!(cli.mac_deny.len(), 0);
+        assert_eq!(cli.port_allow.len(), 0);
+        assert_eq!(cli.port_deny.len(), 0);
+        assert_eq!(cli.name_allow.len(), 0);
+        assert_eq!(cli.name_deny.len(), 0);
     }
 
     #[test]
@@ -141,10 +161,20 @@ mod tests {
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
         assert!(ret.is_ok());
 
-        let ip_allow = ret.unwrap().ip_allow;
+        let cli = ret.unwrap();
+        let ip_allow = cli.ip_allow;
+
         assert_eq!(ip_allow.len(), 2);
         assert_eq!(ip_allow[0].as_str(), "asdf");
         assert_eq!(ip_allow[1].as_str(), "qwer");
+        assert_eq!(cli.ip_deny.len(), 0);
+        assert_eq!(cli.mac_allow.len(), 0);
+        assert_eq!(cli.mac_deny.len(), 0);
+        assert_eq!(cli.port_allow.len(), 0);
+        assert_eq!(cli.port_deny.len(), 0);
+        assert_eq!(cli.name_allow.len(), 0);
+        assert_eq!(cli.name_deny.len(), 0);
+        assert_eq!(ip_allow.len(), 2);
     }
 
     #[test]
@@ -159,10 +189,19 @@ mod tests {
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
         assert!(ret.is_ok());
 
-        let ip_allow = ret.unwrap().ip_allow;
+        let cli = ret.unwrap();
+        let ip_allow = cli.ip_allow;
+
         assert_eq!(ip_allow.len(), 2);
         assert_eq!(ip_allow[0].as_str(), "asdf");
         assert_eq!(ip_allow[1].as_str(), "qwer");
+        assert_eq!(cli.ip_deny.len(), 0);
+        assert_eq!(cli.mac_allow.len(), 0);
+        assert_eq!(cli.mac_deny.len(), 0);
+        assert_eq!(cli.port_allow.len(), 0);
+        assert_eq!(cli.port_deny.len(), 0);
+        assert_eq!(cli.name_allow.len(), 0);
+        assert_eq!(cli.name_deny.len(), 0);
     }
 
     #[test]
@@ -177,10 +216,19 @@ mod tests {
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
         assert!(ret.is_ok());
 
-        let ip_allow = ret.unwrap().ip_allow;
+        let cli = ret.unwrap();
+        let ip_allow = cli.ip_allow;
+
         assert_eq!(ip_allow.len(), 3);
         assert_eq!(ip_allow[0].as_str(), "asdf");
         assert_eq!(ip_allow[1].as_str(), "qwer");
         assert_eq!(ip_allow[2].as_str(), "qwer");
+        assert_eq!(cli.ip_deny.len(), 0);
+        assert_eq!(cli.mac_allow.len(), 0);
+        assert_eq!(cli.mac_deny.len(), 0);
+        assert_eq!(cli.port_allow.len(), 0);
+        assert_eq!(cli.port_deny.len(), 0);
+        assert_eq!(cli.name_allow.len(), 0);
+        assert_eq!(cli.name_deny.len(), 0);
     }
 }
