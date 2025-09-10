@@ -7,28 +7,28 @@ use std::ffi::{c_char, c_int};
 #[derive(Parser, Debug)]
 #[command(version, about, arg_required_else_help(true))]
 struct Cli {
-    #[arg(long)]
+    #[clap(long, value_delimiter(','))]
     ip_allow: Vec<String>,
 
-    #[arg(long)]
+    #[clap(long, value_delimiter(','))]
     ip_deny: Vec<String>,
 
-    #[arg(long)]
+    #[clap(long, value_delimiter(','))]
     mac_allow: Vec<String>,
 
-    #[arg(long)]
+    #[clap(long, value_delimiter(','))]
     mac_deny: Vec<String>,
 
-    #[arg(long)]
+    #[clap(long, value_delimiter(','))]
     port_allow: Vec<String>,
 
-    #[arg(long)]
+    #[clap(long, value_delimiter(','))]
     port_deny: Vec<String>,
 
-    #[arg(long)]
+    #[clap(long, value_delimiter(','))]
     name_allow: Vec<String>,
 
-    #[arg(long)]
+    #[clap(long, value_delimiter(','))]
     name_deny: Vec<String>,
 }
 
@@ -70,7 +70,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_process_pam_args_invalid() {
+    fn test_process_pam_args_tn_invalid() {
         let argv = [
             c"asdf".as_ptr(),
             c"qwer".as_ptr(),
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn test_process_pam_args_empty() {
+    fn test_process_pam_args_tn_empty() {
         let argv = [];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
@@ -95,7 +95,7 @@ mod tests {
     }
 
     #[test]
-    fn test_process_pam_args_flag_without_hyphens() {
+    fn test_process_pam_args_tn_flag_without_hyphens() {
         let argv = [c"ip-allow".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn test_process_pam_args_ip_allow_value_empty() {
+    fn test_process_pam_args_tn_ip_allow_value_empty() {
         let argv = [c"--ip-allow".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn test_process_pam_args_ip_allow_value_string() {
+    fn test_process_pam_args_tp_ip_allow_value_string() {
         let argv = [c"--ip-allow".as_ptr(), c"asdf".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
@@ -125,12 +125,62 @@ mod tests {
     }
 
     #[test]
-    fn test_process_pam_args_ip_allow_value_string_with_equal() {
+    fn test_process_pam_args_tp_ip_allow_value_string_with_equal() {
         let argv = [c"--ip-allow=asdf".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
 
         assert!(ret.is_ok());
         assert_eq!(ret.unwrap().ip_allow[0].as_str(), "asdf");
+    }
+
+    #[test]
+    fn test_process_pam_args_tp_ip_allow_value_comma_separated_string() {
+        let argv = [c"--ip-allow".as_ptr(), c"asdf,qwer".as_ptr()];
+
+        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
+        assert!(ret.is_ok());
+
+        let ip_allow = ret.unwrap().ip_allow;
+        assert_eq!(ip_allow.len(), 2);
+        assert_eq!(ip_allow[0].as_str(), "asdf");
+        assert_eq!(ip_allow[1].as_str(), "qwer");
+    }
+
+    #[test]
+    fn test_process_pam_args_tp_ip_allow_multiple_values() {
+        let argv = [
+            c"--ip-allow".as_ptr(),
+            c"asdf".as_ptr(),
+            c"--ip-allow".as_ptr(),
+            c"qwer".as_ptr(),
+        ];
+
+        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
+        assert!(ret.is_ok());
+
+        let ip_allow = ret.unwrap().ip_allow;
+        assert_eq!(ip_allow.len(), 2);
+        assert_eq!(ip_allow[0].as_str(), "asdf");
+        assert_eq!(ip_allow[1].as_str(), "qwer");
+    }
+
+    #[test]
+    fn test_process_pam_args_tp_ip_allow_multiple_values_mixed_comma_separated() {
+        let argv = [
+            c"--ip-allow".as_ptr(),
+            c"asdf,qwer".as_ptr(),
+            c"--ip-allow".as_ptr(),
+            c"qwer".as_ptr(),
+        ];
+
+        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
+        assert!(ret.is_ok());
+
+        let ip_allow = ret.unwrap().ip_allow;
+        assert_eq!(ip_allow.len(), 3);
+        assert_eq!(ip_allow[0].as_str(), "asdf");
+        assert_eq!(ip_allow[1].as_str(), "qwer");
+        assert_eq!(ip_allow[2].as_str(), "qwer");
     }
 }
