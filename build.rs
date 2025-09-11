@@ -1,6 +1,7 @@
 use bindgen;
 
 use std::env;
+use std::error::Error;
 use std::path::PathBuf;
 
 fn get_binding_for_header(path: &str) -> bindgen::Bindings {
@@ -16,10 +17,10 @@ fn get_binding_for_header(path: &str) -> bindgen::Bindings {
     bindings
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rustc-link-lib=dylib=pam");
 
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let out_path = PathBuf::from(env::var("OUT_DIR")?);
     let ffi_pam = get_binding_for_header("ffi/pam.h");
     let ffi_syslog = get_binding_for_header("ffi/syslog.h");
 
@@ -30,4 +31,6 @@ fn main() {
     ffi_syslog
         .write_to_file(out_path.join("syslog.rs"))
         .expect("Couldn't write bindings!");
+
+    Ok(())
 }
