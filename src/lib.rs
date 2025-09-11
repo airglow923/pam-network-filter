@@ -3,6 +3,7 @@ mod config;
 mod ffi;
 mod item;
 mod log;
+mod network;
 mod parser;
 
 use ffi::pam;
