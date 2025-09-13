@@ -1,3 +1,7 @@
+#[macro_use]
+mod type_traits;
+#[macro_use]
+mod assert;
 mod c_utils;
 mod config;
 mod ffi;
