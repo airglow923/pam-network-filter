@@ -2,6 +2,7 @@
 mod type_traits;
 #[macro_use]
 mod assert;
+mod auth;
 mod c_utils;
 mod config;
 mod ffi;
@@ -16,12 +17,12 @@ use std::ffi::{c_char, c_int};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pam_sm_authenticate(
-    _pamh: *mut pam::pam_handle_t,
-    _flags: c_int,
-    _argc: c_int,
-    _argv: *const *const c_char,
+    pamh: *mut pam::pam_handle_t,
+    flags: c_int,
+    argc: c_int,
+    argv: *const *const c_char,
 ) -> c_int {
-    0
+    auth::authenticate(pamh, flags, argc, argv)
 }
 
 #[unsafe(no_mangle)]
