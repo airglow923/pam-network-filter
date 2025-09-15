@@ -8,28 +8,28 @@ use std::ffi::{c_char, c_int};
 #[command(version, about, arg_required_else_help(true))]
 pub struct Cli {
     #[clap(long, value_delimiter(','))]
-    ip_allow: Vec<String>,
+    pub ip_allow: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    ip_deny: Vec<String>,
+    pub ip_deny: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    mac_allow: Vec<String>,
+    pub mac_allow: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    mac_deny: Vec<String>,
+    pub mac_deny: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    port_allow: Vec<String>,
+    pub port_allow: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    port_deny: Vec<String>,
+    pub port_deny: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    name_allow: Vec<String>,
+    pub name_allow: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    name_deny: Vec<String>,
+    pub name_deny: Vec<String>,
 }
 
 fn parse_c_args(argc: c_int, argv: *const *const c_char) -> Vec<String> {

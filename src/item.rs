@@ -6,12 +6,13 @@ use crate::log;
 use c_utils::parse_c_string;
 use std::ffi::{c_char, c_int, c_void};
 
-#[derive(Debug)]
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
 pub struct Connection {
-    service: String,
-    user: String,
-    ruser: String,
-    rhost: String,
+    pub service: String,
+    pub user: String,
+    pub ruser: String,
+    pub rhost: String,
 }
 
 fn pam_get_err_msg(val: c_int) -> String {
