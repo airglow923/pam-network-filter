@@ -29,7 +29,15 @@ pub fn authenticate(
         }
     };
 
-    let iplist = match network::create_ip_list(parsed.ip_allow) {
+    let ip_allowlist = match network::create_list_ipv4(parsed.ip_allow) {
+        Ok(x) => x,
+        Err(e) => {
+            log::pam_syslog(pamh, syslog::LOG_ERR, &e.to_string());
+            return pam::PAM_AUTHINFO_UNAVAIL;
+        }
+    };
+
+    let ip_denylist = match network::create_list_ipv4(parsed.ip_deny) {
         Ok(x) => x,
         Err(e) => {
             log::pam_syslog(pamh, syslog::LOG_ERR, &e.to_string());
@@ -45,9 +53,14 @@ pub fn authenticate(
         }
     };
 
-    let network::IpList::V4(ipv4list) = iplist;
+    let network::IpList::V4(ipv4_allowlist) = ip_allowlist;
+    let network::IpList::V4(ipv4_denylist) = ip_denylist;
 
-    if !ipv4list.ips.contains(rhost.to_bits()) {
+    if ipv4_denylist.ips.contains(rhost.to_bits()) {
+        return pam::PAM_AUTH_ERR;
+    }
+
+    if !ipv4_allowlist.ips.contains(rhost.to_bits()) {
         return pam::PAM_AUTH_ERR;
     }
 

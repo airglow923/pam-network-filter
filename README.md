@@ -4,9 +4,9 @@ Network filtering PAM for Linux
 
 ## Todo
 
-- [ ] IP filtering
-    - [ ] Allowlist
-    - [ ] Denylist
+- [x] IP filtering
+    - [x] Allowlist
+    - [x] Denylist
 - [ ] MAC filtering
     - [ ] Allowlist
     - [ ] Denylist
