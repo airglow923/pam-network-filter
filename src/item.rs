@@ -110,8 +110,10 @@ mod tests {
 
     use super::*;
 
+    use std::os::raw::c_void;
+
     #[test]
-    fn test_get_pam_connection_tp() {
+    fn test_get_pam_connection_tp_no_remote() {
         let conv: pam::pam_conv = pam::pam_conv::default();
         let mut pamh: *mut pam::pam_handle_t = std::ptr::null_mut();
 
@@ -141,6 +143,53 @@ mod tests {
         assert_eq!(connection.user, "doe");
         assert_eq!(connection.ruser, "");
         assert_eq!(connection.rhost, "");
+
+        let ret = unsafe { pam::pam_end(pamh, pam::PAM_SUCCESS) };
+
+        assert_eq!(ret, pam::PAM_SUCCESS);
+    }
+
+    #[test]
+    fn test_get_pam_connection_tp_remote() {
+        let conv: pam::pam_conv = pam::pam_conv::default();
+        let mut pamh: *mut pam::pam_handle_t = std::ptr::null_mut();
+
+        assert_eq!(pamh, std::ptr::null_mut());
+
+        let ret = unsafe {
+            pam::pam_start(
+                config::PAM_MODULE_NAME.as_ptr(),
+                c"doe".as_ptr(),
+                &conv,
+                &mut pamh,
+            )
+        };
+
+        assert_eq!(ret, pam::PAM_SUCCESS);
+        assert_ne!(pamh, std::ptr::null_mut());
+
+        let ret = unsafe {
+            pam::pam_set_item(pamh, pam::PAM_RUSER, c"hyundeok".as_ptr() as *const c_void)
+        };
+        assert_eq!(ret, pam::PAM_SUCCESS);
+
+        let ret = unsafe {
+            pam::pam_set_item(pamh, pam::PAM_RHOST, c"localhost".as_ptr() as *const c_void)
+        };
+        assert_eq!(ret, pam::PAM_SUCCESS);
+
+        let ret = get_pam_connection(pamh);
+        assert!(ret.is_ok());
+
+        let connection = ret.unwrap();
+
+        assert_eq!(
+            connection.service,
+            config::PAM_MODULE_NAME.to_string_lossy().into_owned()
+        );
+        assert_eq!(connection.user, "doe");
+        assert_eq!(connection.ruser, "hyundeok");
+        assert_eq!(connection.rhost, "localhost");
 
         let ret = unsafe { pam::pam_end(pamh, pam::PAM_SUCCESS) };
 
