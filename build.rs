@@ -22,14 +22,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let out_path = PathBuf::from(env::var("OUT_DIR")?);
     let ffi_pam = get_binding_for_header("ffi/pam.h");
-    let ffi_syslog = get_binding_for_header("ffi/syslog.h");
 
     ffi_pam
         .write_to_file(out_path.join("pam.rs"))
-        .expect("Couldn't write bindings!");
-
-    ffi_syslog
-        .write_to_file(out_path.join("syslog.rs"))
         .expect("Couldn't write bindings!");
 
     Ok(())

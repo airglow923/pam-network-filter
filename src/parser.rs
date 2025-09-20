@@ -2,6 +2,7 @@ use crate::c_utils;
 use crate::config;
 
 use clap::{Parser, error::Error, error::ErrorKind};
+
 use std::ffi::{c_char, c_int};
 
 #[derive(Parser, Debug)]

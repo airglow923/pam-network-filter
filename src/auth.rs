@@ -1,8 +1,10 @@
-use crate::ffi::{pam, syslog};
+use crate::ffi::pam;
 use crate::item;
 use crate::log;
 use crate::network;
 use crate::parser;
+
+use libc;
 
 use std::ffi::{c_char, c_int};
 use std::net::Ipv4Addr;
@@ -16,7 +18,7 @@ pub fn authenticate(
     let parsed = match parser::process_pam_args(argc, argv) {
         Ok(x) => x,
         Err(e) => {
-            log::pam_syslog(pamh, syslog::LOG_ERR, &e.to_string());
+            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
             return pam::PAM_AUTHINFO_UNAVAIL;
         }
     };
@@ -24,7 +26,7 @@ pub fn authenticate(
     let connection = match item::get_pam_connection(pamh) {
         Ok(x) => x,
         Err(e) => {
-            log::pam_syslog(pamh, syslog::LOG_ERR, &e);
+            log::pam_syslog(pamh, libc::LOG_ERR, &e);
             return pam::PAM_AUTHINFO_UNAVAIL;
         }
     };
@@ -32,7 +34,7 @@ pub fn authenticate(
     let ip_allowlist = match network::create_list_ipv4(parsed.ip_allow) {
         Ok(x) => x,
         Err(e) => {
-            log::pam_syslog(pamh, syslog::LOG_ERR, &e.to_string());
+            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
             return pam::PAM_AUTHINFO_UNAVAIL;
         }
     };
@@ -40,7 +42,7 @@ pub fn authenticate(
     let ip_denylist = match network::create_list_ipv4(parsed.ip_deny) {
         Ok(x) => x,
         Err(e) => {
-            log::pam_syslog(pamh, syslog::LOG_ERR, &e.to_string());
+            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
             return pam::PAM_AUTHINFO_UNAVAIL;
         }
     };
@@ -48,7 +50,7 @@ pub fn authenticate(
     let rhost = match connection.rhost.parse::<Ipv4Addr>() {
         Ok(x) => x,
         Err(e) => {
-            log::pam_syslog(pamh, syslog::LOG_ERR, &e.to_string());
+            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
             return pam::PAM_AUTHINFO_UNAVAIL;
         }
     };

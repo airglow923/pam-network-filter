@@ -1,9 +1,10 @@
 use crate::c_utils;
 use crate::ffi::pam;
-use crate::ffi::syslog;
 use crate::log;
 
 use c_utils::parse_c_string;
+use libc;
+
 use std::ffi::{c_char, c_int, c_void};
 
 #[allow(dead_code)]
@@ -56,8 +57,8 @@ fn pam_item_log_err_and_throw(
 
     match val {
         pam::PAM_SUCCESS => return Ok(()),
-        pam::PAM_SYSTEM_ERR => log::syslog(syslog::LOG_ERR, format!("PAM {}", msg).as_str()),
-        _ => log::pam_syslog(pamh, syslog::LOG_ERR, &msg),
+        pam::PAM_SYSTEM_ERR => log::syslog(libc::LOG_ERR, format!("PAM {}", msg).as_str()),
+        _ => log::pam_syslog(pamh, libc::LOG_ERR, &msg),
     }
 
     Err(msg)

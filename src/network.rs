@@ -4,6 +4,7 @@ extern crate roaring;
 use ipnet::Ipv4Net;
 use regex::Regex;
 use roaring::RoaringBitmap;
+
 use std::error::Error;
 use std::net::Ipv4Addr;
 
