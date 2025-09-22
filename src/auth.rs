@@ -30,18 +30,6 @@ pub fn authenticate(
         }
     };
 
-    let filter_user_deny = match filter::filter_from_users(parsed.user_deny) {
-        Ok(x) => x,
-        Err(e) => {
-            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
-            return pam::PAM_AUTHINFO_UNAVAIL;
-        }
-    };
-
-    if filter_user_deny.contains(&connection.user) {
-        return pam::PAM_AUTH_ERR;
-    }
-
     let filter_user_allow = match filter::filter_from_users(parsed.user_allow) {
         Ok(x) => x,
         Err(e) => {
@@ -54,18 +42,6 @@ pub fn authenticate(
         return pam::PAM_AUTH_ERR;
     }
 
-    let filter_ipv4_deny = match filter::filter_from_ips(parsed.ip_deny) {
-        Ok(x) => x,
-        Err(e) => {
-            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
-            return pam::PAM_AUTHINFO_UNAVAIL;
-        }
-    };
-
-    if filter_ipv4_deny.contains(&connection.rhost) {
-        return pam::PAM_AUTH_ERR;
-    }
-
     let filter_ipv4_allow = match filter::filter_from_ips(parsed.ip_allow) {
         Ok(x) => x,
         Err(e) => {
@@ -74,7 +50,7 @@ pub fn authenticate(
         }
     };
 
-    if filter_ipv4_allow.contains(&connection.rhost) {
+    if !filter_ipv4_allow.contains(&connection.rhost) {
         return pam::PAM_AUTH_ERR;
     }
 

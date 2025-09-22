@@ -12,25 +12,13 @@ pub struct Cli {
     pub ip_allow: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    pub ip_deny: Vec<String>,
-
-    #[clap(long, value_delimiter(','))]
     pub mac_allow: Vec<String>,
-
-    #[clap(long, value_delimiter(','))]
-    pub mac_deny: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
     pub port_allow: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    pub port_deny: Vec<String>,
-
-    #[clap(long, value_delimiter(','))]
     pub user_allow: Vec<String>,
-
-    #[clap(long, value_delimiter(','))]
-    pub user_deny: Vec<String>,
 }
 
 fn parse_c_args(argc: c_int, argv: *const *const c_char) -> Vec<String> {
@@ -126,13 +114,9 @@ mod tests {
 
         assert_eq!(cli.ip_allow.len(), 1);
         assert_eq!(cli.ip_allow[0].as_str(), "asdf");
-        assert_eq!(cli.ip_deny.len(), 0);
         assert_eq!(cli.mac_allow.len(), 0);
-        assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
-        assert_eq!(cli.port_deny.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
-        assert_eq!(cli.user_deny.len(), 0);
     }
 
     #[test]
@@ -146,13 +130,9 @@ mod tests {
 
         assert_eq!(cli.ip_allow.len(), 1);
         assert_eq!(cli.ip_allow[0].as_str(), "asdf");
-        assert_eq!(cli.ip_deny.len(), 0);
         assert_eq!(cli.mac_allow.len(), 0);
-        assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
-        assert_eq!(cli.port_deny.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
-        assert_eq!(cli.user_deny.len(), 0);
     }
 
     #[test]
@@ -168,13 +148,9 @@ mod tests {
         assert_eq!(ip_allow.len(), 2);
         assert_eq!(ip_allow[0].as_str(), "asdf");
         assert_eq!(ip_allow[1].as_str(), "qwer");
-        assert_eq!(cli.ip_deny.len(), 0);
         assert_eq!(cli.mac_allow.len(), 0);
-        assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
-        assert_eq!(cli.port_deny.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
-        assert_eq!(cli.user_deny.len(), 0);
         assert_eq!(ip_allow.len(), 2);
     }
 
@@ -196,13 +172,9 @@ mod tests {
         assert_eq!(ip_allow.len(), 2);
         assert_eq!(ip_allow[0].as_str(), "asdf");
         assert_eq!(ip_allow[1].as_str(), "qwer");
-        assert_eq!(cli.ip_deny.len(), 0);
         assert_eq!(cli.mac_allow.len(), 0);
-        assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
-        assert_eq!(cli.port_deny.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
-        assert_eq!(cli.user_deny.len(), 0);
     }
 
     #[test]
@@ -224,12 +196,8 @@ mod tests {
         assert_eq!(ip_allow[0].as_str(), "asdf");
         assert_eq!(ip_allow[1].as_str(), "qwer");
         assert_eq!(ip_allow[2].as_str(), "qwer");
-        assert_eq!(cli.ip_deny.len(), 0);
         assert_eq!(cli.mac_allow.len(), 0);
-        assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
-        assert_eq!(cli.port_deny.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
-        assert_eq!(cli.user_deny.len(), 0);
     }
 }

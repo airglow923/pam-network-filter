@@ -6,13 +6,11 @@ Network filtering PAM for Linux
 
 - [x] IP filtering
     - [x] Allowlist
-    - [x] Denylist
+- [ ] Domain filtering
+    - [ ] Allowlist
 - [ ] MAC filtering
     - [ ] Allowlist
-    - [ ] Denylist
 - [ ] Port filtering
     - [ ] Allowlist
-    - [ ] Denylist
-- [ ] User filtering
-    - [ ] Allowlist
-    - [ ] Denylist
+- [x] User filtering
+    - [x] Allowlist
