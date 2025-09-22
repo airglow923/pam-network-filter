@@ -9,7 +9,7 @@ use std::error::Error;
 use std::net::Ipv4Addr;
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 enum Pattern {
     Ipv4Addr,
     Ipv6Addr,
@@ -19,13 +19,14 @@ enum Pattern {
     Ipv6Range,
 }
 
-#[derive(Debug, Clone)]
+#[allow(dead_code)]
+#[derive(Debug)]
 pub enum IpList {
     V4(Ipv4List),
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Ipv4List {
     pub ips: RoaringBitmap,
     pub subnets: Vec<Ipv4Net>,
@@ -56,10 +57,29 @@ fn find_ip_match(ip: &str) -> Result<Pattern, regex::Error> {
         return Ok(Pattern::Ipv4Addr);
     }
 
-    Err(regex::Error::Syntax("no matching pattern".to_owned()))
+    Err(regex::Error::Syntax(format!(
+        "'{}' no matching pattern",
+        ip
+    )))
 }
 
-pub fn create_list_ipv4(ip_list: Vec<String>) -> Result<IpList, Box<dyn Error>> {
+#[allow(dead_code)]
+fn is_domain(domain: &str) -> Result<(), regex::Error> {
+    let pattern_domain = Regex::new(
+        r"^(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25})$",
+    )?;
+
+    if !pattern_domain.is_match(domain) {
+        return Err(regex::Error::Syntax(format!(
+            "'{}' wrong domain syntax",
+            domain
+        )));
+    }
+
+    Ok(())
+}
+
+pub fn create_list_ipv4(ip_list: Vec<String>) -> Result<Ipv4List, Box<dyn Error>> {
     let mut ips = RoaringBitmap::new();
     let mut subnets = Vec::new();
     let mut ranges = Vec::new();
@@ -81,13 +101,17 @@ pub fn create_list_ipv4(ip_list: Vec<String>) -> Result<IpList, Box<dyn Error>> 
 
                 if let [lower, upper] = &range[0..2] {
                     if lower >= upper {
-                        return Err(Box::<dyn Error>::from(
-                            "IP on left side should be lower than the right one",
-                        ));
+                        return Err(Box::<dyn Error>::from(format!(
+                            "'{}' IP on left side should be lower than the right one",
+                            ip
+                        )));
                     }
                     ranges.push((lower.parse::<Ipv4Addr>()?, upper.parse::<Ipv4Addr>()?));
                 } else {
-                    return Err(Box::<dyn Error>::from("wrong input for IPv4 range syntax"));
+                    return Err(Box::<dyn Error>::from(format!(
+                        "'{}' wrong input for IPv4 range syntax",
+                        ip
+                    )));
                 }
 
                 Ok(())
@@ -100,11 +124,11 @@ pub fn create_list_ipv4(ip_list: Vec<String>) -> Result<IpList, Box<dyn Error>> 
         }
     }
 
-    Ok(IpList::V4(Ipv4List {
+    Ok(Ipv4List {
         ips,
         subnets,
         ranges,
-    }))
+    })
 }
 
 #[cfg(test)]
@@ -205,11 +229,11 @@ mod tests {
     }
 
     #[test]
-    fn test_create_ip_list_tp_ipv4addr_single() {
+    fn test_create_list_ipv4_tp_ipv4addr_single() {
         let ret = create_list_ipv4(vec!["127.0.0.255".to_owned()]);
         assert!(ret.is_ok());
 
-        let IpList::V4(list) = ret.unwrap();
+        let list = ret.unwrap();
         assert_eq!(list.ips.len(), 1);
         assert_eq!(list.subnets.len(), 0);
         assert_eq!(list.ranges.len(), 0);
@@ -217,11 +241,11 @@ mod tests {
     }
 
     #[test]
-    fn test_create_ip_list_tp_ipv4addr_multiple() {
+    fn test_create_list_ipv4_tp_ipv4addr_multiple() {
         let ret = create_list_ipv4(vec!["127.0.0.255".to_owned(), "0.0.0.0".to_owned()]);
         assert!(ret.is_ok());
 
-        let IpList::V4(list) = ret.unwrap();
+        let list = ret.unwrap();
         assert_eq!(list.ips.len(), 2);
         assert_eq!(list.subnets.len(), 0);
         assert_eq!(list.ranges.len(), 0);
@@ -230,18 +254,18 @@ mod tests {
     }
 
     #[test]
-    fn test_create_ip_list_tn_ipv4addr_out_of_range() {
+    fn test_create_list_ipv4_tn_ipv4addr_out_of_range() {
         let ret = create_list_ipv4(vec!["127.0.0.256".to_owned()]);
 
         assert!(ret.is_err());
     }
 
     #[test]
-    fn test_create_ip_list_tp_ipv4net_single() {
+    fn test_create_list_ipv4_tp_ipv4net_single() {
         let ret = create_list_ipv4(vec!["127.0.0.255/32".to_owned()]);
         assert!(ret.is_ok());
 
-        let IpList::V4(list) = ret.unwrap();
+        let list = ret.unwrap();
         assert_eq!(list.ips.len(), 0);
         assert_eq!(list.subnets.len(), 1);
         assert_eq!(list.ranges.len(), 0);
@@ -249,11 +273,11 @@ mod tests {
     }
 
     #[test]
-    fn test_create_ip_list_tp_ipv4net_multiple() {
+    fn test_create_list_ipv4_tp_ipv4net_multiple() {
         let ret = create_list_ipv4(vec!["127.0.0.255/32".to_owned(), "0.0.0.0/32".to_owned()]);
         assert!(ret.is_ok());
 
-        let IpList::V4(list) = ret.unwrap();
+        let list = ret.unwrap();
         assert_eq!(list.ips.len(), 0);
         assert_eq!(list.subnets.len(), 2);
         assert_eq!(list.ranges.len(), 0);
@@ -262,17 +286,17 @@ mod tests {
     }
 
     #[test]
-    fn test_create_ip_list_tn_ipv4net_invalid_subnet() {
+    fn test_create_list_ipv4_tn_ipv4net_invalid_subnet() {
         let ret = create_list_ipv4(vec!["127.0.0.255/33".to_owned()]);
         assert!(ret.is_err());
     }
 
     #[test]
-    fn test_create_ip_list_tp_ipv4range_single() {
+    fn test_create_list_ipv4_tp_ipv4range_single() {
         let ret = create_list_ipv4(vec!["127.0.0.254-127.0.0.255".to_owned()]);
         assert!(ret.is_ok());
 
-        let IpList::V4(list) = ret.unwrap();
+        let list = ret.unwrap();
         assert_eq!(list.ips.len(), 0);
         assert_eq!(list.subnets.len(), 0);
         assert_eq!(list.ranges.len(), 1);
@@ -281,13 +305,13 @@ mod tests {
     }
 
     #[test]
-    fn test_create_ip_list_tn_ipv4range_equal() {
+    fn test_create_list_ipv4_tn_ipv4range_equal() {
         let ret = create_list_ipv4(vec!["127.0.0.254-127.0.0.254".to_owned()]);
         assert!(ret.is_err());
     }
 
     #[test]
-    fn test_create_ip_list_tn_ipv4range_invalid() {
+    fn test_create_list_ipv4_tn_ipv4range_invalid() {
         let ret = create_list_ipv4(vec!["127.0.0.255-127.0.0.254".to_owned()]);
         assert!(ret.is_err());
     }

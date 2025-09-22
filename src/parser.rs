@@ -27,10 +27,10 @@ pub struct Cli {
     pub port_deny: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    pub name_allow: Vec<String>,
+    pub user_allow: Vec<String>,
 
     #[clap(long, value_delimiter(','))]
-    pub name_deny: Vec<String>,
+    pub user_deny: Vec<String>,
 }
 
 fn parse_c_args(argc: c_int, argv: *const *const c_char) -> Vec<String> {
@@ -131,8 +131,8 @@ mod tests {
         assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.port_deny.len(), 0);
-        assert_eq!(cli.name_allow.len(), 0);
-        assert_eq!(cli.name_deny.len(), 0);
+        assert_eq!(cli.user_allow.len(), 0);
+        assert_eq!(cli.user_deny.len(), 0);
     }
 
     #[test]
@@ -151,8 +151,8 @@ mod tests {
         assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.port_deny.len(), 0);
-        assert_eq!(cli.name_allow.len(), 0);
-        assert_eq!(cli.name_deny.len(), 0);
+        assert_eq!(cli.user_allow.len(), 0);
+        assert_eq!(cli.user_deny.len(), 0);
     }
 
     #[test]
@@ -173,8 +173,8 @@ mod tests {
         assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.port_deny.len(), 0);
-        assert_eq!(cli.name_allow.len(), 0);
-        assert_eq!(cli.name_deny.len(), 0);
+        assert_eq!(cli.user_allow.len(), 0);
+        assert_eq!(cli.user_deny.len(), 0);
         assert_eq!(ip_allow.len(), 2);
     }
 
@@ -201,8 +201,8 @@ mod tests {
         assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.port_deny.len(), 0);
-        assert_eq!(cli.name_allow.len(), 0);
-        assert_eq!(cli.name_deny.len(), 0);
+        assert_eq!(cli.user_allow.len(), 0);
+        assert_eq!(cli.user_deny.len(), 0);
     }
 
     #[test]
@@ -229,7 +229,7 @@ mod tests {
         assert_eq!(cli.mac_deny.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.port_deny.len(), 0);
-        assert_eq!(cli.name_allow.len(), 0);
-        assert_eq!(cli.name_deny.len(), 0);
+        assert_eq!(cli.user_allow.len(), 0);
+        assert_eq!(cli.user_deny.len(), 0);
     }
 }

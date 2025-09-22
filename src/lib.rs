@@ -6,6 +6,7 @@ mod auth;
 mod c_utils;
 mod config;
 mod ffi;
+mod filter;
 mod item;
 mod log;
 mod network;

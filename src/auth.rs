@@ -1,13 +1,12 @@
 use crate::ffi::pam;
+use crate::filter;
 use crate::item;
 use crate::log;
-use crate::network;
 use crate::parser;
 
 use libc;
 
 use std::ffi::{c_char, c_int};
-use std::net::Ipv4Addr;
 
 pub fn authenticate(
     pamh: *mut pam::pam_handle_t,
@@ -31,7 +30,7 @@ pub fn authenticate(
         }
     };
 
-    let ip_allowlist = match network::create_list_ipv4(parsed.ip_allow) {
+    let filter_user_deny = match filter::filter_from_users(parsed.user_deny) {
         Ok(x) => x,
         Err(e) => {
             log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
@@ -39,30 +38,43 @@ pub fn authenticate(
         }
     };
 
-    let ip_denylist = match network::create_list_ipv4(parsed.ip_deny) {
-        Ok(x) => x,
-        Err(e) => {
-            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
-            return pam::PAM_AUTHINFO_UNAVAIL;
-        }
-    };
-
-    let rhost = match connection.rhost.parse::<Ipv4Addr>() {
-        Ok(x) => x,
-        Err(e) => {
-            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
-            return pam::PAM_AUTHINFO_UNAVAIL;
-        }
-    };
-
-    let network::IpList::V4(ipv4_allowlist) = ip_allowlist;
-    let network::IpList::V4(ipv4_denylist) = ip_denylist;
-
-    if ipv4_denylist.ips.contains(rhost.to_bits()) {
+    if filter_user_deny.contains(&connection.user) {
         return pam::PAM_AUTH_ERR;
     }
 
-    if !ipv4_allowlist.ips.contains(rhost.to_bits()) {
+    let filter_user_allow = match filter::filter_from_users(parsed.user_allow) {
+        Ok(x) => x,
+        Err(e) => {
+            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
+            return pam::PAM_AUTHINFO_UNAVAIL;
+        }
+    };
+
+    if !filter_user_allow.contains(&connection.user) {
+        return pam::PAM_AUTH_ERR;
+    }
+
+    let filter_ipv4_deny = match filter::filter_from_ips(parsed.ip_deny) {
+        Ok(x) => x,
+        Err(e) => {
+            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
+            return pam::PAM_AUTHINFO_UNAVAIL;
+        }
+    };
+
+    if filter_ipv4_deny.contains(&connection.rhost) {
+        return pam::PAM_AUTH_ERR;
+    }
+
+    let filter_ipv4_allow = match filter::filter_from_ips(parsed.ip_allow) {
+        Ok(x) => x,
+        Err(e) => {
+            log::pam_syslog(pamh, libc::LOG_ERR, &e.to_string());
+            return pam::PAM_AUTHINFO_UNAVAIL;
+        }
+    };
+
+    if filter_ipv4_allow.contains(&connection.rhost) {
         return pam::PAM_AUTH_ERR;
     }
 
