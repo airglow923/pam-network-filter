@@ -63,7 +63,8 @@ jobs:
 
       - name: Build and create container
         run: |
-          podman build \
+          docker build \
             -t pam-network-filter \
-            -f $GITHUB_WORKSPACE/tests/integration/Containerfile
-          podman create --name pam-network-filter pam-network-filter
+            -f $GITHUB_WORKSPACE/tests/integration/Containerfile \
+            .
+          docker create --name pam-network-filter pam-network-filter
