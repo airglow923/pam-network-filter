@@ -28,10 +28,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install dependencies
-        run: sudo apt-get install libpam0g-dev libgtest-dev
-
       - uses: actions/checkout@v4
+
+      - name: Update packages
+        run: sudo apt-get update
+
+      - name: Install dependencies
+        run: >
+          sudo apt-get install -y --fix-missing
+              libpam0g-dev libgtest-dev
+
       - name: Build
         run: cargo build --verbose
 
