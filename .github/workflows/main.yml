@@ -66,5 +66,5 @@ jobs:
           docker build \
             -t pam-network-filter \
             -f $GITHUB_WORKSPACE/tests/integration/Containerfile \
-            .
+            $GITHUB_WORKSPACE
           docker create --name pam-network-filter pam-network-filter
