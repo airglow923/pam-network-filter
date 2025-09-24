@@ -1,5 +1,4 @@
-name: main
-run-name: Build and run unit tests
+name: Main
 
 on:
   push:
