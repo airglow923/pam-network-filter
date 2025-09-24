@@ -50,7 +50,7 @@ fn pam_item_log_err_and_throw(
     item_type: c_int,
 ) -> Result<(), String> {
     let msg = format!(
-        "item type: '{}', {}",
+        "item type: '{}', {}\0",
         pam_item_type_to_string(item_type),
         pam_get_err_msg(val)
     );

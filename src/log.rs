@@ -20,6 +20,6 @@ pub fn log_unimplemented_pam_function(pamh: *mut pam::pam_handle_t, name: &str) 
     pam_syslog(
         pamh,
         libc::LOG_INFO,
-        format!("feature '{}' not implemented", name).as_str(),
+        format!("feature '{}' not implemented\0", name).as_str(),
     );
 }
