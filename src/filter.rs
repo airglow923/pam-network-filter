@@ -39,6 +39,16 @@ impl FilterIp {
 
         false
     }
+
+    pub fn is_empty(&self) -> bool {
+        let network::Ipv4List {
+            ips,
+            subnets,
+            ranges,
+        } = &self.list_ipv4;
+
+        ips.is_empty() && subnets.is_empty() && ranges.is_empty()
+    }
 }
 
 pub fn filter_from_ips(ips: Vec<String>) -> Result<FilterIp, Box<dyn Error>> {
@@ -49,7 +59,7 @@ pub fn filter_from_ips(ips: Vec<String>) -> Result<FilterIp, Box<dyn Error>> {
 
 pub fn filter_from_users(users: Vec<String>) -> Result<HashSet<String>, regex::Error> {
     let mut filter = HashSet::new();
-    let pattern_username = Regex::new(r"^[a-z][-a-z0-9_]*\$")?;
+    let pattern_username = Regex::new(r"^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$")?;
 
     for user in users {
         if pattern_username.is_match(&user) {
