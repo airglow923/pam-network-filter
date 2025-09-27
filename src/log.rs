@@ -6,13 +6,17 @@ use std::ffi::{c_char, c_int};
 
 pub fn syslog(priority: c_int, msg: &str) {
     unsafe {
-        libc::syslog(priority, msg.as_ptr() as *const c_char);
+        libc::syslog(priority, format!("{}\0", msg).as_ptr() as *const c_char);
     }
 }
 
 pub fn pam_syslog(pamh: *const pam::pam_handle_t, priority: c_int, msg: &str) {
     unsafe {
-        pam::pam_syslog(pamh, priority, msg.as_ptr() as *const c_char);
+        pam::pam_syslog(
+            pamh,
+            priority,
+            format!("{}\0", msg).as_ptr() as *const c_char,
+        );
     }
 }
 
@@ -20,6 +24,6 @@ pub fn log_unimplemented_pam_function(pamh: *mut pam::pam_handle_t, name: &str) 
     pam_syslog(
         pamh,
         libc::LOG_INFO,
-        format!("feature '{}' not implemented\0", name).as_str(),
+        format!("feature '{}' not implemented", name).as_str(),
     );
 }

@@ -24,7 +24,7 @@ macro_rules! err_if_not_contains {
     ($haystack: expr, $needle: expr, $pamh: expr $(,)?) => {
         if !$haystack.is_empty() && !$haystack.contains($needle) {
             let name_filter = stringify!($haystack).split('_').collect::<Vec<&str>>()[1];
-            let msg = format!("{} '{}' is not allowed\0", name_filter, $needle);
+            let msg = format!("{} '{}' is not allowed", name_filter, $needle);
 
             log::pam_syslog($pamh, libc::LOG_ERR, &msg);
 
@@ -47,7 +47,7 @@ pub fn authenticate(
     err_if_not_contains!(filter_user_allow, &connection.user, pamh);
     err_if_not_contains!(filter_ipv4_allow, &connection.rhost, pamh);
 
-    log::pam_syslog(pamh, libc::LOG_INFO, "authentication succeeded\0");
+    log::pam_syslog(pamh, libc::LOG_INFO, "authentication succeeded");
 
     pam::PAM_SUCCESS
 }
