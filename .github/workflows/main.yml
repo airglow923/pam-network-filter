@@ -25,7 +25,7 @@ env:
 
 jobs:
   build-and-test:
-    name: Build and run unit tests
+    name: Build and run tests
     runs-on: ubuntu-latest
 
     steps:
@@ -46,27 +46,28 @@ jobs:
                 https://sh.rustup.rs | sh -s - -y && \
             . "$HOME/.cargo/env"
 
-      - name: Build
+      - name: Build library - Debug
         run: cargo build --verbose
 
       - name: Run tests
         run: $GITHUB_WORKSPACE/test.sh --verbose
 
-  integration-test:
-    name: Integration tests on containers
-    needs: build-and-test
-    runs-on: ubuntu-latest
-
-    steps:
       - name: Set up Docker
         uses: docker/setup-docker-action@v4
 
-      - uses: actions/checkout@v5
-
-      - name: Build and create container
+      - name: Build, create and run container
+        working-directory: $GITHUB_WORKSPACE/tests/integration
         run: |
-          docker build \
-            -t pam-network-filter \
-            -f $GITHUB_WORKSPACE/tests/integration/Containerfile \
-            $GITHUB_WORKSPACE
+          docker build -t pam-network-filter .
           docker create --name pam-network-filter pam-network-filter
+          docker start pam-network-filter
+
+      - name: Build library - Release
+        run: cargo build --release --verbose
+
+      - name: Copy files for testing
+        working-directory: $GITHUB_WORKSPACE
+        run: |
+          docker cp \
+            target/release/libpam_network_filter.so \
+            pam-network-filter:/usr/lib/security/pam_network_filter.so
