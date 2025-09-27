@@ -56,7 +56,7 @@ jobs:
         uses: docker/setup-docker-action@v4
 
       - name: Build, create and run container
-        working-directory: $GITHUB_WORKSPACE/tests/integration
+        working-directory: ${{ github.workspace }}/tests/integration
         run: |
           docker build -t pam-network-filter .
           docker create --name pam-network-filter pam-network-filter
