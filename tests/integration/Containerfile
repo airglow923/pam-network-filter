@@ -1,3 +1,31 @@
 FROM alpine:latest
 
 LABEL maintainer="Hyundeok Park <p.hyundeok76@gmail.com>"
+
+RUN apk add --update --no-cache \
+    openssh openssh-server-pam openssl rsyslog
+
+RUN sed -i 's/#\s*\(SyslogFacility.*\)/\1/' /etc/ssh/sshd_config
+RUN sed -i 's/#\s*\(LogLevel.*\)/\1/' /etc/ssh/sshd_config
+RUN sed -i 's/#\s*\(PermitRootLogin\).*/\1 yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#\s*\(MaxAuthTries\).*/\1 99/' /etc/ssh/sshd_config
+RUN sed -i 's/#\s*\(PasswordAuthentication\).*/\1 no/' /etc/ssh/sshd_config
+RUN sed -i 's/#\s*\(KbdInteractiveAuthentication\).*/\1 no/' /etc/ssh/sshd_config
+RUN sed -i 's/#\s*\(UsePAM\).*/\1 yes/' /etc/ssh/sshd_config
+RUN echo "AuthenticationMethods publickey,keyboard-interactive" | tee -a /etc/ssh/sshd_config
+RUN sed -i '/\/var\/log\/auth\.log/s/^/auth,/' /etc/rsyslog.conf
+
+RUN ssh-keygen -A
+RUN ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519" -N ""
+RUN ssh-keyscan -t ed25519 localhost | tee -a "$HOME/.ssh/known_hosts"
+RUN ssh-keygen -H
+
+RUN rm "$HOME/.ssh/known_hosts.old"
+RUN cat "$HOME/.ssh/id_ed25519.pub" | tee -a "$HOME/.ssh/authorized_keys"
+RUN chmod 600 "$HOME/.ssh/authorized_keys"
+
+COPY test.sh /
+COPY entrypoint.sh /
+
+EXPOSE 22
+ENTRYPOINT ["/entrypoint.sh"]
