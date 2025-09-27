@@ -66,7 +66,7 @@ jobs:
         run: cargo build --release --verbose
 
       - name: Copy files for testing
-        working-directory: $GITHUB_WORKSPACE
+        working-directory: ${{ github.workspace }}
         run: |
           docker cp \
             target/release/libpam_network_filter.so \
