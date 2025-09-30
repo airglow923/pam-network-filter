@@ -9,6 +9,8 @@ DIR_TEST_CASES="cases"
 
 cd "${DIR_ROOT}"
 
+ret=0
+
 for test_case in $(find "$DIR_TEST_CASES" -maxdepth 1 -type d ! -path "$DIR_TEST_CASES"); do
     echo "Test case: $(basename "$test_case") running"
     cd "$test_case"
@@ -20,6 +22,7 @@ for test_case in $(find "$DIR_TEST_CASES" -maxdepth 1 -type d ! -path "$DIR_TEST
     printf "Test case: $(basename "$test_case") "
 
     if [ $ret -ne 0 ]; then
+        ret=1
         echo "failed"
     else
         echo "succeeded"
@@ -27,3 +30,5 @@ for test_case in $(find "$DIR_TEST_CASES" -maxdepth 1 -type d ! -path "$DIR_TEST
 
     cd - >/dev/null 2>&1
 done
+
+return $ret
