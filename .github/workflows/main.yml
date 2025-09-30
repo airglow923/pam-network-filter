@@ -10,6 +10,7 @@ on:
       - "Cargo.toml"
       - "CMakeLists.txt"
       - ".github/workflows/**"
+      - "Containerfile"
   pull_request:
     branches: ["main"]
     paths:
@@ -19,6 +20,7 @@ on:
       - "Cargo.toml"
       - "CMakeLists.txt"
       - ".github/workflows/**"
+      - "Containerfile"
 
 env:
   CARGO_TERM_COLOR: always
