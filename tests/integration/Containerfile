@@ -17,10 +17,6 @@ RUN echo "\$ActionFileDefaultTemplate RSYSLOG_FileFormat" | tee -a /etc/rsyslog.
 
 RUN ssh-keygen -A
 RUN ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519" -N ""
-RUN ssh-keyscan -t ed25519 localhost | tee -a "$HOME/.ssh/known_hosts"
-RUN ssh-keygen -H
-
-RUN rm "$HOME/.ssh/known_hosts.old"
 RUN cat "$HOME/.ssh/id_ed25519.pub" | tee -a "$HOME/.ssh/authorized_keys"
 RUN chmod 600 "$HOME/.ssh/authorized_keys"
 

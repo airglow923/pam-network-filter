@@ -22,7 +22,8 @@ test_ssh() {
     msg="${4:-""}"
     ret=0
 
-    ssh "${user}@${dest}" -f "true" && ret=$? || ret=$?
+    ssh -o StrictHostKeyChecking=accept-new \
+        "${user}@${dest}" -f "true" && ret=$? || ret=$?
 
     if [ $positive = true ] && [ $ret -ne 0 ]; then
         echo "SSH test failed when success expected"
