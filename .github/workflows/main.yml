@@ -71,3 +71,7 @@ jobs:
           docker cp \
             target/release/libpam_network_filter.so \
             pam-network-filter:/usr/lib/security/pam_network_filter.so
+
+      - name: Run integration tests
+        working-directory: ${{ github.workspace }}
+        run: docker exec pam-network-filter /test.sh
