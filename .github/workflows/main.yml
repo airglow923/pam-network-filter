@@ -77,4 +77,14 @@ jobs:
             $NAME_REPO:/usr/lib/security/pam_network_filter.so
 
       - name: Run integration tests
+        continue-on-error: true
         run: docker exec $NAME_REPO /test.sh
+
+      - name: Log
+        run: docker exec $NAME_REPO cat /var/log/auth.log
+
+      - name: Test again
+        run: docker exec $NAME_REPO /test.sh
+
+      - name: Log again
+        run: docker exec $NAME_REPO cat /var/log/auth.log
