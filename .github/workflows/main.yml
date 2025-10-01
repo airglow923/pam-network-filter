@@ -29,6 +29,8 @@ jobs:
   build-and-test:
     name: Build and run tests
     runs-on: ubuntu-latest
+    env:
+      NAME_REPO: pam-network-filter
 
     steps:
       - uses: actions/checkout@v5
@@ -60,9 +62,9 @@ jobs:
       - name: Build, create and run container
         working-directory: ${{ github.workspace }}/tests/integration
         run: |
-          docker build -t pam-network-filter -f Containerfile .
-          docker create --name pam-network-filter pam-network-filter
-          docker start pam-network-filter
+          docker build -t $NAME_REPO -f Containerfile .
+          docker create --name $NAME_REPO $NAME_REPO
+          docker start $NAME_REPO
 
       - name: Build library - Release
         run: cargo build --release --verbose
@@ -72,7 +74,7 @@ jobs:
         run: |
           docker cp \
             target/release/libpam_network_filter.so \
-            pam-network-filter:/usr/lib/security/pam_network_filter.so
+            $NAME_REPO:/usr/lib/security/pam_network_filter.so
 
       - name: Run integration tests
-        run: docker exec pam-network-filter /test.sh
+        run: docker exec $NAME_REPO /test.sh
