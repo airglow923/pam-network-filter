@@ -15,6 +15,22 @@ reload_rsyslogd() {
     kill -HUP $(cat /var/run/rsyslogd.pid)
 }
 
+sleep_for() {
+    seconds="$1"
+
+    perl -e "select(undef, undef, undef, $seconds);"
+}
+
+update_sshd_config() {
+    if [ ! -e "test.conf" ]; then
+        return 0
+    fi
+
+    cp "test.conf" /etc/ssh/sshd_config.d/
+    reload_sshd
+    sleep_for 0.1
+}
+
 test_ssh() {
     user="$1"
     dest="$2"
