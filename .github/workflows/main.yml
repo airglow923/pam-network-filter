@@ -2,7 +2,7 @@ name: Main
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "debug"]
     paths:
       - "**.sh"
       - "**.rs"
@@ -12,7 +12,7 @@ on:
       - ".github/workflows/**"
       - "**/Containerfile"
   pull_request:
-    branches: ["main"]
+    branches: ["main", "debug"]
     paths:
       - "**.sh"
       - "**.rs"
