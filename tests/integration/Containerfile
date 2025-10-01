@@ -19,6 +19,7 @@ RUN sed -i 's/#\s*\(MaxAuthTries\).*/\1 99/' /etc/ssh/sshd_config
 RUN sed -i 's/#\s*\(KbdInteractiveAuthentication\).*/\1 yes/' /etc/ssh/sshd_config
 RUN sed -i 's/#\s*\(UsePAM\).*/\1 yes/' /etc/ssh/sshd_config
 RUN sed -i 's/^Include .*//' /etc/ssh/sshd_config
+RUN echo "ListenAddress 0.0.0.0" | tee -a /etc/ssh/sshd_config
 RUN echo "AuthenticationMethods publickey,keyboard-interactive" | tee -a /etc/ssh/sshd_config
 RUN echo "Include /etc/ssh/sshd_config.d/*.conf" | tee -a /etc/ssh/sshd_config
 RUN sed -i '/\/var\/log\/auth\.log/s/^/auth,/' /etc/rsyslog.conf
