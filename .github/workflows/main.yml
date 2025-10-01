@@ -4,23 +4,23 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "*.sh"
-      - "*.rs"
-      - "*.cc"
-      - "Cargo.toml"
-      - "CMakeLists.txt"
+      - "**.sh"
+      - "**.rs"
+      - "**.cc"
+      - "**/Cargo.toml"
+      - "**/CMakeLists.txt"
       - ".github/workflows/**"
-      - "Containerfile"
+      - "**/Containerfile"
   pull_request:
     branches: ["main"]
     paths:
-      - "*.sh"
-      - "*.rs"
-      - "*.cc"
-      - "Cargo.toml"
-      - "CMakeLists.txt"
+      - "**.sh"
+      - "**.rs"
+      - "**.cc"
+      - "**/Cargo.toml"
+      - "**/CMakeLists.txt"
       - ".github/workflows/**"
-      - "Containerfile"
+      - "**/Containerfile"
 
 env:
   CARGO_TERM_COLOR: always
