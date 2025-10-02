@@ -1,0 +1,1 @@
+auth required pam_network_filter.so --user-allow root
