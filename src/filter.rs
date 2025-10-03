@@ -51,7 +51,7 @@ impl FilterIp {
     }
 }
 
-pub fn filter_from_ips(ips: Vec<String>) -> Result<FilterIp, Box<dyn Error>> {
+pub fn filter_from_ips(ips: Vec<String>) -> Result<FilterIp, String> {
     let list_ipv4 = network::create_list_ipv4(ips)?;
 
     Ok(FilterIp { list_ipv4 })

@@ -1,12 +1,20 @@
 extern crate ipnet;
 extern crate roaring;
 
+use fancy_regex::Regex;
 use ipnet::Ipv4Net;
-use regex::Regex;
 use roaring::RoaringBitmap;
 
-use std::error::Error;
 use std::net::Ipv4Addr;
+
+macro_rules! err_if_fail {
+    ($e: expr $(,)?) => {
+        match $e {
+            Ok(x) => x,
+            Err(e) => return Err(e.to_string()),
+        }
+    };
+}
 
 #[allow(dead_code)]
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -17,6 +25,7 @@ enum Pattern {
     Ipv6Net,
     Ipv4Range,
     Ipv6Range,
+    Domain,
 }
 
 #[allow(dead_code)]
@@ -33,53 +42,50 @@ pub struct Ipv4List {
     pub ranges: Vec<(Ipv4Addr, Ipv4Addr)>,
 }
 
-fn find_ip_match(ip: &str) -> Result<Pattern, regex::Error> {
+fn find_ip_match(ip: &str) -> Result<Pattern, String> {
     let pattern_ipv4addr_str = r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}";
-    let pattern_ranges = Regex::new(format!(r"^{p}-{p}$", p = pattern_ipv4addr_str).as_str())?;
+    let pattern_ranges = err_if_fail!(Regex::new(
+        format!(r"^{p}-{p}$", p = pattern_ipv4addr_str).as_str()
+    ));
 
-    if pattern_ranges.is_match(ip) {
+    if err_if_fail!(pattern_ranges.is_match(ip)) {
         return Ok(Pattern::Ipv4Range);
     }
 
     // \d       => 0-9
     // [1-2]?\d => 10-29
     // 3[0-2]   => 30-32
-    let pattern_ipv4net =
-        Regex::new(format!(r"^{}/(\d|[1-2]?\d|3[0-2])$", pattern_ipv4addr_str).as_str())?;
+    let pattern_ipv4net = err_if_fail!(Regex::new(
+        format!(r"^{}/(\d|[1-2]?\d|3[0-2])$", pattern_ipv4addr_str).as_str()
+    ));
 
-    if pattern_ipv4net.is_match(ip) {
+    if err_if_fail!(pattern_ipv4net.is_match(ip)) {
         return Ok(Pattern::Ipv4Net);
     }
 
-    let pattern_ipv4addr = Regex::new(format!("^{}$", pattern_ipv4addr_str).as_str())?;
+    let pattern_ipv4addr = err_if_fail!(Regex::new(format!("^{}$", pattern_ipv4addr_str).as_str()));
 
-    if pattern_ipv4addr.is_match(ip) {
+    if err_if_fail!(pattern_ipv4addr.is_match(ip)) {
         return Ok(Pattern::Ipv4Addr);
     }
 
-    Err(regex::Error::Syntax(format!(
-        "'{}' no matching pattern",
-        ip
-    )))
+    Err(format!("'{}' no matching pattern", ip))
 }
 
 #[allow(dead_code)]
-fn is_domain(domain: &str) -> Result<(), regex::Error> {
-    let pattern_domain = Regex::new(
-        r"^(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25})$",
-    )?;
+fn is_domain(domain: &str) -> Result<(), String> {
+    let pattern_domain = err_if_fail!(Regex::new(
+        r"^(?!:\/\/)(?=.{1,255}$)((.{1,63}\.){1,127}(?![0-9]*$)[\w-]+\.?)$"
+    ));
 
-    if !pattern_domain.is_match(domain) {
-        return Err(regex::Error::Syntax(format!(
-            "'{}' wrong domain syntax",
-            domain
-        )));
+    if !err_if_fail!(pattern_domain.is_match(domain)) {
+        return Err(format!("'{}' wrong domain syntax", domain));
     }
 
     Ok(())
 }
 
-pub fn create_list_ipv4(ip_list: Vec<String>) -> Result<Ipv4List, Box<dyn Error>> {
+pub fn create_list_ipv4(ip_list: Vec<String>) -> Result<Ipv4List, String> {
     let mut ips = RoaringBitmap::new();
     let mut subnets = Vec::new();
     let mut ranges = Vec::new();
@@ -87,13 +93,13 @@ pub fn create_list_ipv4(ip_list: Vec<String>) -> Result<Ipv4List, Box<dyn Error>
     for ip in ip_list {
         let pat = find_ip_match(&ip)?;
 
-        let ret: Result<(), Box<dyn Error>> = match pat {
+        let ret: Result<(), String> = match pat {
             Pattern::Ipv4Addr => {
-                ips.insert(ip.parse::<Ipv4Addr>()?.to_bits());
+                ips.insert(err_if_fail!(ip.parse::<Ipv4Addr>()).to_bits());
                 Ok(())
             }
             Pattern::Ipv4Net => {
-                subnets.push(ip.parse::<Ipv4Net>()?);
+                subnets.push(err_if_fail!(ip.parse::<Ipv4Net>()));
                 Ok(())
             }
             Pattern::Ipv4Range => {
@@ -101,22 +107,22 @@ pub fn create_list_ipv4(ip_list: Vec<String>) -> Result<Ipv4List, Box<dyn Error>
 
                 if let [lower, upper] = &range[0..2] {
                     if lower >= upper {
-                        return Err(Box::<dyn Error>::from(format!(
+                        return Err(format!(
                             "'{}' IP on left side should be lower than the right one",
                             ip
-                        )));
+                        ));
                     }
-                    ranges.push((lower.parse::<Ipv4Addr>()?, upper.parse::<Ipv4Addr>()?));
+                    ranges.push((
+                        err_if_fail!(lower.parse::<Ipv4Addr>()),
+                        err_if_fail!(upper.parse::<Ipv4Addr>()),
+                    ));
                 } else {
-                    return Err(Box::<dyn Error>::from(format!(
-                        "'{}' wrong input for IPv4 range syntax",
-                        ip
-                    )));
+                    return Err(format!("'{}' wrong input for IPv4 range syntax", ip));
                 }
 
                 Ok(())
             }
-            _ => Err(Box::<dyn Error>::from("no matching pattern")),
+            _ => Err("no matching pattern".to_owned()),
         };
 
         if let Err(e) = ret {
@@ -148,7 +154,7 @@ mod tests {
         let ret = find_ip_match("1127.0.0.1-127.0.0.1");
 
         assert!(ret.is_err());
-        assert_eq_type!(ret.unwrap_err(), regex::Error);
+        assert_eq_type!(ret.unwrap_err(), String);
     }
 
     #[test]
@@ -156,7 +162,7 @@ mod tests {
         let ret = find_ip_match("127.0.0.1-127.0.0.1a");
 
         assert!(ret.is_err());
-        assert_eq_type!(ret.unwrap_err(), regex::Error);
+        assert_eq_type!(ret.unwrap_err(), String);
     }
 
     #[test]
@@ -182,7 +188,7 @@ mod tests {
         let ret = find_ip_match("127.0.0.1/33");
 
         assert!(ret.is_err());
-        assert_eq_type!(ret.unwrap_err(), regex::Error);
+        assert_eq_type!(ret.unwrap_err(), String);
     }
 
     #[test]
@@ -190,7 +196,7 @@ mod tests {
         let ret = find_ip_match("127.0.0.1/100");
 
         assert!(ret.is_err());
-        assert_eq_type!(ret.unwrap_err(), regex::Error);
+        assert_eq_type!(ret.unwrap_err(), String);
     }
 
     #[test]
@@ -206,7 +212,7 @@ mod tests {
         let ret = find_ip_match("1127.0.0.1");
 
         assert!(ret.is_err());
-        assert_eq_type!(ret.unwrap_err(), regex::Error);
+        assert_eq_type!(ret.unwrap_err(), String);
     }
 
     #[test]
@@ -214,7 +220,7 @@ mod tests {
         let ret = find_ip_match("127.0.0.1111");
 
         assert!(ret.is_err());
-        assert_eq_type!(ret.unwrap_err(), regex::Error);
+        assert_eq_type!(ret.unwrap_err(), String);
     }
 
     // currently regex pattern does not check whether an IP octet is in 0-255
