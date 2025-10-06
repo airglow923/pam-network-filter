@@ -25,7 +25,6 @@ enum Pattern {
     Ipv6Net,
     Ipv4Range,
     Ipv6Range,
-    Domain,
 }
 
 #[allow(dead_code)]

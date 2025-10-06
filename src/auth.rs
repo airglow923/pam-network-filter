@@ -6,6 +6,7 @@ use crate::parser;
 
 use libc;
 
+use filter::Filter;
 use std::ffi::{c_char, c_int};
 
 macro_rules! pam_syslog_on_err {
