@@ -14,8 +14,8 @@ pub struct AddrinfoBuilder {
 }
 
 impl AddrinfoBuilder {
-    pub fn new() -> AddrinfoBuilder {
-        AddrinfoBuilder {
+    pub const fn new() -> Self {
+        Self {
             ai_flags: libc::AI_V4MAPPED | libc::AI_ADDRCONFIG,
             ai_family: libc::AF_UNSPEC,
             ai_socktype: 0,

@@ -18,6 +18,26 @@ pub enum AiFamily {
     AF_UNSPEC,
 }
 
+struct AddrinfoSmartPointer {
+    pub addrinfo: *mut libc::addrinfo,
+}
+
+impl AddrinfoSmartPointer {
+    pub const fn new() -> Self {
+        Self {
+            addrinfo: std::ptr::null_mut(),
+        }
+    }
+}
+
+impl Drop for AddrinfoSmartPointer {
+    fn drop(&mut self) {
+        unsafe {
+            libc::freeaddrinfo(self.addrinfo);
+        }
+    }
+}
+
 fn eai_get_err_msg(err: c_int) -> String {
     return match err {
         libc::EAI_BADFLAGS => "EAI_BADFLAGS: addrinfo.ai_flags contains invalid flags".to_owned(),
@@ -39,23 +59,38 @@ fn eai_get_err_msg(err: c_int) -> String {
     };
 }
 
-pub fn get_domain_from_ip(ip: IpAddr) -> Result<Vec<String>, String> {
-    // let ip = match ip {
-    //     IpAddr::V4 => Ipv4Addr(ip),
-    //     IpAddr::V6 => Ipv6Addr(ip),
-    // };
+pub fn get_domain_from_ip(ip: IpAddr) -> Result<String, String> {
+    let ip_nullterminated = format!("{}\0", ip.to_string());
+    let node = ip_nullterminated.as_ptr() as *const c_char;
+    let hints = AddrinfoBuilder::new().flags(libc::AI_NUMERICHOST).build();
+    let mut res = AddrinfoSmartPointer::new();
 
-    // int getnameinfo(socklen_t hostlen, socklen_t servlen;
-    //                   const struct sockaddr *restrict addr, socklen_t addrlen,
-    //                   char host[_Nullable restrict hostlen],
-    //                   socklen_t hostlen,
-    //                   char serv[_Nullable restrict servlen],
-    //                   socklen_t servlen,
-    //                   int flags);
+    let ret = unsafe { libc::getaddrinfo(node, std::ptr::null(), &hints, &mut res.addrinfo) };
 
-    // libc::getnameinfo(sa, salen, host, hostlen, serv, servlen, flags)
+    if ret != 0 {
+        return Err(eai_get_err_msg(ret));
+    }
 
-    Ok(Vec::new())
+    let dret = unsafe { *res.addrinfo };
+    let mut host: [c_char; NI_MAXHOST_USIZE] = [0; NI_MAXHOST_USIZE];
+
+    let ret = unsafe {
+        libc::getnameinfo(
+            dret.ai_addr,
+            dret.ai_addrlen,
+            host.as_mut_ptr(),
+            libc::NI_MAXHOST,
+            std::ptr::null_mut(),
+            0,
+            libc::NI_NAMEREQD,
+        )
+    };
+
+    if ret != 0 {
+        return Err(eai_get_err_msg(ret));
+    }
+
+    Ok(c_utils::parse_c_string(host.as_ptr()))
 }
 
 pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAddr>, String> {
@@ -69,16 +104,15 @@ pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAdd
             AiFamily::AF_UNSPEC => libc::AF_UNSPEC,
         })
         .build();
+    let mut res = AddrinfoSmartPointer::new();
 
-    let mut res: *mut libc::addrinfo = std::ptr::null_mut();
-
-    let ret = unsafe { libc::getaddrinfo(node, std::ptr::null(), &hints, &mut res) };
+    let ret = unsafe { libc::getaddrinfo(node, std::ptr::null(), &hints, &mut res.addrinfo) };
 
     if ret != 0 {
         return Err(eai_get_err_msg(ret));
     }
 
-    let mut p = res;
+    let mut p = res.addrinfo;
     let mut lookup = Vec::new();
 
     while p != std::ptr::null_mut() {
@@ -111,10 +145,6 @@ pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAdd
         lookup.push(ip);
 
         p = dp.ai_next;
-    }
-
-    unsafe {
-        libc::freeaddrinfo(res);
     }
 
     Ok(lookup)
