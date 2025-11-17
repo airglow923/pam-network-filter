@@ -1,3 +1,4 @@
+#[macro_export]
 #[allow(unused_macros)]
 macro_rules! is_same {
     ($left:ty, $($right:ty),+ $(,)*) => {
@@ -5,6 +6,7 @@ macro_rules! is_same {
     };
 }
 
+#[macro_export]
 #[allow(unused_macros)]
 macro_rules! is_type_of {
     ($left:expr, $right:ty $(,)?) => {{
