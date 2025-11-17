@@ -7,6 +7,7 @@ mod error;
 mod auth;
 mod c_utils;
 mod config;
+mod domain;
 mod ffi;
 mod filter;
 mod item;
