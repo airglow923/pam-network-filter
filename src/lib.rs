@@ -4,6 +4,7 @@ mod type_traits;
 mod assert;
 #[macro_use]
 mod error;
+mod addrinfo_builder;
 mod auth;
 mod c_utils;
 mod config;

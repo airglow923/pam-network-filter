@@ -1,3 +1,4 @@
+use crate::addrinfo_builder;
 use crate::c_utils;
 
 use libc;
@@ -5,6 +6,10 @@ use libc;
 use std::ffi::{c_char, c_int};
 use std::io::Error;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+
+use addrinfo_builder::AddrinfoBuilder;
+
+const NI_MAXHOST_USIZE: usize = libc::NI_MAXHOST as usize;
 
 #[allow(non_camel_case_types)]
 pub enum AiFamily {
@@ -34,28 +39,36 @@ fn eai_get_err_msg(err: c_int) -> String {
     };
 }
 
+pub fn get_domain_from_ip(ip: IpAddr) -> Result<Vec<String>, String> {
+    // let ip = match ip {
+    //     IpAddr::V4 => Ipv4Addr(ip),
+    //     IpAddr::V6 => Ipv6Addr(ip),
+    // };
+
+    // int getnameinfo(socklen_t hostlen, socklen_t servlen;
+    //                   const struct sockaddr *restrict addr, socklen_t addrlen,
+    //                   char host[_Nullable restrict hostlen],
+    //                   socklen_t hostlen,
+    //                   char serv[_Nullable restrict servlen],
+    //                   socklen_t servlen,
+    //                   int flags);
+
+    // libc::getnameinfo(sa, salen, host, hostlen, serv, servlen, flags)
+
+    Ok(Vec::new())
+}
+
 pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAddr>, String> {
     let domain_nullterminated = format!("{}\0", domain);
     let node = domain_nullterminated.as_ptr() as *const c_char;
-
-    let hints = libc::addrinfo {
-        // AI_IDN, AI_CANONIDN do not exist in libc crate
-        ai_flags: libc::AI_CANONNAME,
-        ai_family: match ai_family {
+    let hints = AddrinfoBuilder::new()
+        .flags(libc::AI_CANONNAME)
+        .family(match ai_family {
             AiFamily::AF_INET => libc::AF_INET,
             AiFamily::AF_INET6 => libc::AF_INET6,
             AiFamily::AF_UNSPEC => libc::AF_UNSPEC,
-        },
-        // neither SOCK_DGRAM or SOCK_STREAM
-        ai_socktype: 0,
-        // any IPPROTO_*
-        ai_protocol: 0,
-        // zero out rest of unnecessary fields
-        ai_addrlen: 0,
-        ai_addr: std::ptr::null_mut(),
-        ai_canonname: std::ptr::null_mut(),
-        ai_next: std::ptr::null_mut(),
-    };
+        })
+        .build();
 
     let mut res: *mut libc::addrinfo = std::ptr::null_mut();
 
@@ -67,7 +80,6 @@ pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAdd
 
     let mut p = res;
     let mut lookup = Vec::new();
-    const NI_MAXHOST_USIZE: usize = libc::NI_MAXHOST as usize;
 
     while p != std::ptr::null_mut() {
         let dp = unsafe { *p };
