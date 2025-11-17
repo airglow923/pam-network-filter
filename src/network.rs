@@ -7,15 +7,6 @@ use roaring::RoaringBitmap;
 
 use std::net::Ipv4Addr;
 
-macro_rules! err_if_fail {
-    ($e: expr $(,)?) => {
-        match $e {
-            Ok(x) => x,
-            Err(e) => return Err(e.to_string()),
-        }
-    };
-}
-
 #[allow(dead_code)]
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 enum Pattern {

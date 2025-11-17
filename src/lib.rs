@@ -2,6 +2,8 @@
 mod type_traits;
 #[macro_use]
 mod assert;
+#[macro_use]
+mod error;
 mod auth;
 mod c_utils;
 mod config;
