@@ -1,4 +1,3 @@
-use crate::addrinfo_builder;
 use crate::c_utils;
 
 use libc;
@@ -7,10 +6,16 @@ use std::ffi::{c_char, c_int};
 use std::io::Error;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-use addrinfo_builder::AddrinfoBuilder;
+mod addrinfo_builder;
+mod addrinfo_smart_pointer;
 
+use addrinfo_builder::AddrinfoBuilder;
+use addrinfo_smart_pointer::AddrinfoSmartPointer;
+
+#[allow(dead_code)]
 const NI_MAXHOST_USIZE: usize = libc::NI_MAXHOST as usize;
 
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 pub enum AiFamily {
     AF_INET,
@@ -18,26 +23,7 @@ pub enum AiFamily {
     AF_UNSPEC,
 }
 
-struct AddrinfoSmartPointer {
-    pub addrinfo: *mut libc::addrinfo,
-}
-
-impl AddrinfoSmartPointer {
-    pub const fn new() -> Self {
-        Self {
-            addrinfo: std::ptr::null_mut(),
-        }
-    }
-}
-
-impl Drop for AddrinfoSmartPointer {
-    fn drop(&mut self) {
-        unsafe {
-            libc::freeaddrinfo(self.addrinfo);
-        }
-    }
-}
-
+#[allow(dead_code)]
 fn eai_get_err_msg(err: c_int) -> String {
     return match err {
         libc::EAI_BADFLAGS => "EAI_BADFLAGS: addrinfo.ai_flags contains invalid flags".to_owned(),
@@ -59,6 +45,7 @@ fn eai_get_err_msg(err: c_int) -> String {
     };
 }
 
+#[allow(dead_code)]
 pub fn get_domain_from_ip(ip: IpAddr) -> Result<String, String> {
     let ip_nullterminated = format!("{}\0", ip.to_string());
     let node = ip_nullterminated.as_ptr() as *const c_char;
@@ -93,6 +80,7 @@ pub fn get_domain_from_ip(ip: IpAddr) -> Result<String, String> {
     Ok(c_utils::parse_c_string(host.as_ptr()))
 }
 
+#[allow(dead_code)]
 pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAddr>, String> {
     let domain_nullterminated = format!("{}\0", domain);
     let node = domain_nullterminated.as_ptr() as *const c_char;
