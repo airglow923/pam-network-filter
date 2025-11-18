@@ -1,8 +1,8 @@
-use crate::ffi::pam;
+use std::ffi::{c_char, c_int};
 
 use libc;
 
-use std::ffi::{c_char, c_int};
+use crate::ffi::pam;
 
 pub fn syslog(priority: c_int, msg: &str) {
     unsafe {

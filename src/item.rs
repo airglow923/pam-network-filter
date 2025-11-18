@@ -1,11 +1,12 @@
+use std::ffi::{c_char, c_int, c_void};
+
+use libc;
+
 use crate::c_utils;
 use crate::ffi::pam;
 use crate::log;
 
 use c_utils::parse_c_string;
-use libc;
-
-use std::ffi::{c_char, c_int, c_void};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]

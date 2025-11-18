@@ -1,11 +1,11 @@
-extern crate ipnet;
-extern crate roaring;
+use std::net::Ipv4Addr;
 
 use fancy_regex::Regex;
+use ipnet;
+use roaring;
+
 use ipnet::Ipv4Net;
 use roaring::RoaringBitmap;
-
-use std::net::Ipv4Addr;
 
 #[allow(dead_code)]
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]

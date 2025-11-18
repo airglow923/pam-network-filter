@@ -1,13 +1,14 @@
+use std::ffi::{c_char, c_int};
+
+use libc;
+
 use crate::ffi::pam;
 use crate::filter;
 use crate::item;
 use crate::log;
 use crate::parser;
 
-use libc;
-
 use filter::Filter;
-use std::ffi::{c_char, c_int};
 
 macro_rules! pam_syslog_on_err {
     ($e: expr, $pamh: expr $(,)?) => {

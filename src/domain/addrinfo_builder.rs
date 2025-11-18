@@ -1,6 +1,6 @@
-use libc;
-
 use std::ffi::{c_char, c_int};
+
+use libc;
 
 pub struct AddrinfoBuilder {
     ai_flags: c_int,

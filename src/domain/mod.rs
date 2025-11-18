@@ -1,16 +1,16 @@
-use crate::c_utils;
-
-use libc;
-
 use std::ffi::{c_char, c_int};
 use std::io::Error;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-mod addrinfo_builder;
-mod addrinfo_smart_pointer;
+use libc;
+
+use crate::c_utils;
 
 use addrinfo_builder::AddrinfoBuilder;
 use addrinfo_smart_pointer::AddrinfoSmartPointer;
+
+mod addrinfo_builder;
+mod addrinfo_smart_pointer;
 
 #[allow(dead_code)]
 const NI_MAXHOST_USIZE: usize = libc::NI_MAXHOST as usize;

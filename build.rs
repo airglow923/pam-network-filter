@@ -1,8 +1,8 @@
-use bindgen;
-
 use std::env;
 use std::error::Error;
 use std::path::PathBuf;
+
+use bindgen;
 
 fn get_binding_for_header(path: &str) -> bindgen::Bindings {
     bindgen::Builder::default()

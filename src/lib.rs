@@ -1,3 +1,7 @@
+use std::ffi::{c_char, c_int};
+
+use ffi::pam;
+
 #[macro_use]
 mod type_traits;
 #[macro_use]
@@ -14,10 +18,6 @@ mod item;
 mod log;
 mod network;
 mod parser;
-
-use ffi::pam;
-
-use std::ffi::{c_char, c_int};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pam_sm_authenticate(

@@ -1,9 +1,9 @@
-use crate::network;
-
 use regex::Regex;
 use std::collections::HashSet;
 use std::marker::Sized;
 use std::net::Ipv4Addr;
+
+use crate::network;
 
 pub trait Filter {
     type Value: ?Sized;

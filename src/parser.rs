@@ -1,9 +1,9 @@
-use crate::c_utils;
-use crate::config;
+use std::ffi::{c_char, c_int};
 
 use clap::{Parser, error::Error, error::ErrorKind};
 
-use std::ffi::{c_char, c_int};
+use crate::c_utils;
+use crate::config;
 
 #[derive(Parser, Debug)]
 #[command(version, about, arg_required_else_help(true))]
