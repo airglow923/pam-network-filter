@@ -3,11 +3,8 @@ use std::ffi::{c_char, c_int};
 use ffi::pam;
 
 #[macro_use]
-mod type_traits;
-#[macro_use]
-mod assert;
-#[macro_use]
-mod error;
+mod macros;
+
 mod auth;
 mod c_utils;
 mod config;

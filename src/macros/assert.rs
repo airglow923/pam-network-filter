@@ -1,4 +1,3 @@
-#[macro_export]
 #[allow(unused_macros)]
 macro_rules! assert_eq_type {
     ($left:expr, $right:ty $(,)?) => {
@@ -9,7 +8,6 @@ macro_rules! assert_eq_type {
     };
 }
 
-#[macro_export]
 #[allow(unused_macros)]
 macro_rules! assert_ne_type {
     ($left:expr, $right:ty $(,)?) => {
