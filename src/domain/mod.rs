@@ -137,3 +137,26 @@ pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAdd
 
     Ok(lookup)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_domain_from_ip_tp_localhost() {
+        let ret = get_domain_from_ip(IpAddr::V4("127.0.0.1".parse::<Ipv4Addr>().unwrap()));
+        assert!(ret.is_ok());
+
+        let domain = ret.unwrap();
+        assert_eq!(domain, "localhost");
+    }
+
+    #[test]
+    fn test_get_domain_from_ip_tn_0000() {
+        let ret = get_domain_from_ip(IpAddr::V4("0.0.0.0".parse::<Ipv4Addr>().unwrap()));
+        assert!(ret.is_err());
+
+        let err = ret.unwrap_err();
+        assert!(err.contains("EAI_AGAIN"));
+    }
+}
