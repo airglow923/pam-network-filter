@@ -143,7 +143,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_domain_from_ip_tp_localhost() {
+    fn test_get_domain_from_ip_tp_ipv4_localhost() {
         let ret = get_domain_from_ip(IpAddr::V4("127.0.0.1".parse::<Ipv4Addr>().unwrap()));
         assert!(ret.is_ok());
 
@@ -152,11 +152,29 @@ mod tests {
     }
 
     #[test]
-    fn test_get_domain_from_ip_tn_0000() {
+    fn test_get_domain_from_ip_tn_ipv4_0000() {
         let ret = get_domain_from_ip(IpAddr::V4("0.0.0.0".parse::<Ipv4Addr>().unwrap()));
         assert!(ret.is_err());
 
         let err = ret.unwrap_err();
         assert!(err.contains("EAI_AGAIN"));
+    }
+
+    #[test]
+    fn test_get_domain_from_ip_tp_ipv6_localhost() {
+        let ret = get_domain_from_ip(IpAddr::V6("::1".parse::<Ipv6Addr>().unwrap()));
+        assert!(ret.is_ok());
+
+        let domain = ret.unwrap();
+        assert_eq!(domain, "ip6-localhost");
+    }
+
+    #[test]
+    fn test_get_domain_from_ip_tn_ipv6_any() {
+        let ret = get_domain_from_ip(IpAddr::V6("::".parse::<Ipv6Addr>().unwrap()));
+        assert!(ret.is_err());
+
+        let err = ret.unwrap_err();
+        assert!(err.contains("EAI_NONAME"));
     }
 }
