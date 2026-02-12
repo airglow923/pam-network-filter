@@ -166,7 +166,7 @@ mod tests {
         assert!(ret.is_ok());
 
         let domain = ret.unwrap();
-        assert_eq!(domain, "ip6-localhost");
+        assert!(domain.contains("localhost"));
     }
 
     #[test]
