@@ -157,7 +157,7 @@ mod tests {
         assert!(ret.is_err());
 
         let err = ret.unwrap_err();
-        assert!(err.contains("EAI_AGAIN"));
+        assert!(err.contains("EAI_NONAME"));
     }
 
     #[test]
