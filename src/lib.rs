@@ -15,6 +15,7 @@ mod item;
 mod log;
 mod network;
 mod parser;
+mod pattern;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pam_sm_authenticate(

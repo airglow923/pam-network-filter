@@ -1,11 +1,12 @@
 use std::net::Ipv4Addr;
 
-use fancy_regex::Regex;
 use ipnet;
 use roaring;
 
 use ipnet::Ipv4Net;
 use roaring::RoaringBitmap;
+
+use crate::pattern;
 
 #[allow(dead_code)]
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -33,29 +34,21 @@ pub struct Ipv4List {
 }
 
 fn find_ip_match(ip: &str) -> Result<Pattern, String> {
-    let pattern_ipv4addr_str = r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}";
-    let pattern_ranges = err_if_fail!(Regex::new(
-        format!(r"^{p}-{p}$", p = pattern_ipv4addr_str).as_str()
-    ));
+    let pat_ipv4_range = err_if_fail!(pattern::pat_ipv4_range());
 
-    if err_if_fail!(pattern_ranges.is_match(ip)) {
+    if err_if_fail!(pat_ipv4_range.is_match(ip)) {
         return Ok(Pattern::Ipv4Range);
     }
 
-    // \d       => 0-9
-    // [1-2]?\d => 10-29
-    // 3[0-2]   => 30-32
-    let pattern_ipv4net = err_if_fail!(Regex::new(
-        format!(r"^{}/(\d|[1-2]?\d|3[0-2])$", pattern_ipv4addr_str).as_str()
-    ));
+    let pat_ipv4_subnet = err_if_fail!(pattern::pat_ipv4_subnet());
 
-    if err_if_fail!(pattern_ipv4net.is_match(ip)) {
+    if err_if_fail!(pat_ipv4_subnet.is_match(ip)) {
         return Ok(Pattern::Ipv4Net);
     }
 
-    let pattern_ipv4addr = err_if_fail!(Regex::new(format!("^{}$", pattern_ipv4addr_str).as_str()));
+    let pat_ipv4 = err_if_fail!(pattern::pat_ipv4());
 
-    if err_if_fail!(pattern_ipv4addr.is_match(ip)) {
+    if err_if_fail!(pat_ipv4.is_match(ip)) {
         return Ok(Pattern::Ipv4Addr);
     }
 
@@ -64,11 +57,9 @@ fn find_ip_match(ip: &str) -> Result<Pattern, String> {
 
 #[allow(dead_code)]
 fn is_domain(domain: &str) -> Result<(), String> {
-    let pattern_domain = err_if_fail!(Regex::new(
-        r"^(?!:\/\/)(?=.{1,255}$)((.{1,63}\.){1,127}(?![0-9]*$)[\w-]+\.?)$"
-    ));
+    let pat_fqdn = err_if_fail!(pattern::pat_fqdn());
 
-    if !err_if_fail!(pattern_domain.is_match(domain)) {
+    if !err_if_fail!(pat_fqdn.is_match(domain)) {
         return Err(format!("'{}' wrong domain syntax", domain));
     }
 
