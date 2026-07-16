@@ -1,4 +1,3 @@
-use regex::Regex;
 use std::collections::HashSet;
 use std::marker::Sized;
 use std::net::Ipv4Addr;
@@ -103,7 +102,7 @@ pub fn filter_from_ips(ips: Vec<String>) -> Result<impl Filter<Value = str>, Str
 
 pub fn filter_from_users(users: Vec<String>) -> Result<impl Filter<Value = str>, String> {
     let mut filter = FilterUser::default();
-    let pat_username = err_if_fail!(pattern::pat_username());
+    let pat_username = pattern::pat_username();
 
     for user in users {
         if err_if_fail!(pat_username.is_match(&user)) {
@@ -118,7 +117,7 @@ pub fn filter_from_users(users: Vec<String>) -> Result<impl Filter<Value = str>,
 
 pub fn filter_from_domains(domains: Vec<String>) -> Result<impl Filter<Value = str>, String> {
     let mut filter = FilterDomain::default();
-    let pat_fqdn = err_if_fail!(pattern::pat_fqdn());
+    let pat_fqdn = pattern::pat_fqdn();
 
     for domain in domains {
         if err_if_fail!(pat_fqdn.is_match(&domain)) {

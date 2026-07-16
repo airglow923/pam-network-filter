@@ -34,19 +34,19 @@ pub struct Ipv4List {
 }
 
 fn find_ip_match(ip: &str) -> Result<Pattern, String> {
-    let pat_ipv4_range = err_if_fail!(pattern::pat_ipv4_range());
+    let pat_ipv4_range = pattern::pat_ipv4_range();
 
     if err_if_fail!(pat_ipv4_range.is_match(ip)) {
         return Ok(Pattern::Ipv4Range);
     }
 
-    let pat_ipv4_subnet = err_if_fail!(pattern::pat_ipv4_subnet());
+    let pat_ipv4_subnet = pattern::pat_ipv4_subnet();
 
     if err_if_fail!(pat_ipv4_subnet.is_match(ip)) {
         return Ok(Pattern::Ipv4Net);
     }
 
-    let pat_ipv4 = err_if_fail!(pattern::pat_ipv4());
+    let pat_ipv4 = pattern::pat_ipv4();
 
     if err_if_fail!(pat_ipv4.is_match(ip)) {
         return Ok(Pattern::Ipv4Addr);
@@ -57,7 +57,7 @@ fn find_ip_match(ip: &str) -> Result<Pattern, String> {
 
 #[allow(dead_code)]
 fn is_domain(domain: &str) -> Result<(), String> {
-    let pat_fqdn = err_if_fail!(pattern::pat_fqdn());
+    let pat_fqdn = pattern::pat_fqdn();
 
     if !err_if_fail!(pat_fqdn.is_match(domain)) {
         return Err(format!("'{}' wrong domain syntax", domain));
