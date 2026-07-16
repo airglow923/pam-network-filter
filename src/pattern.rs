@@ -22,3 +22,7 @@ pub fn pat_fqdn() -> fancy_regex::Result<Regex> {
     // from RegExr FQDN: https://regexr.com/3g5j0
     Regex::new(r"^(?!:\/\/)(?=.{1,255}$)((.{1,63}\.){1,127}(?![0-9]*$)[a-z0-9-]+\.?)$")
 }
+
+pub fn pat_username() -> fancy_regex::Result<Regex> {
+    Regex::new(r"^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$")
+}

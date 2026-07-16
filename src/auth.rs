@@ -45,9 +45,12 @@ pub fn authenticate(
     let connection = pam_syslog_on_err!(item::get_pam_connection(pamh), pamh);
     let filter_user_allow = pam_syslog_on_err!(filter::filter_from_users(parsed.user_allow), pamh);
     let filter_ipv4_allow = pam_syslog_on_err!(filter::filter_from_ips(parsed.ip_allow), pamh);
+    let filter_domain_allow =
+        pam_syslog_on_err!(filter::filter_from_domains(parsed.domain_allow), pamh);
 
     err_if_not_contains!(filter_user_allow, &connection.user, pamh);
     err_if_not_contains!(filter_ipv4_allow, &connection.rhost, pamh);
+    err_if_not_contains!(filter_domain_allow, &connection.rhost, pamh);
 
     log::pam_syslog(pamh, libc::LOG_INFO, "authentication succeeded");
 

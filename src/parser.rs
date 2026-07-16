@@ -19,6 +19,9 @@ pub struct Cli {
 
     #[clap(long, value_delimiter(','))]
     pub user_allow: Vec<String>,
+
+    #[clap(long, value_delimiter(','))]
+    pub domain_allow: Vec<String>,
 }
 
 fn parse_c_args(argc: c_int, argv: *const *const c_char) -> Vec<String> {

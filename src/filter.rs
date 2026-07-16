@@ -4,6 +4,7 @@ use std::marker::Sized;
 use std::net::Ipv4Addr;
 
 use crate::network;
+use crate::pattern;
 
 pub trait Filter {
     type Value: ?Sized;
@@ -22,9 +23,10 @@ pub struct FilterUser {
     users: HashSet<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Default)]
-pub struct FilterHost {}
+pub struct FilterDomain {
+    domains: HashSet<String>,
+}
 
 impl Filter for FilterIp {
     type Value = str;
@@ -81,24 +83,48 @@ impl Filter for FilterUser {
     }
 }
 
+impl Filter for FilterDomain {
+    type Value = str;
+
+    fn contains(&self, domain: &str) -> bool {
+        self.domains.contains(domain)
+    }
+
+    fn is_empty(&self) -> bool {
+        self.domains.is_empty()
+    }
+}
+
 pub fn filter_from_ips(ips: Vec<String>) -> Result<impl Filter<Value = str>, String> {
     let list_ipv4 = network::create_list_ipv4(ips)?;
 
     Ok(FilterIp { list_ipv4 })
 }
 
-pub fn filter_from_users(users: Vec<String>) -> Result<impl Filter<Value = str>, regex::Error> {
+pub fn filter_from_users(users: Vec<String>) -> Result<impl Filter<Value = str>, String> {
     let mut filter = FilterUser::default();
-    let pattern_username = Regex::new(r"^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$")?;
+    let pat_username = err_if_fail!(pattern::pat_username());
 
     for user in users {
-        if pattern_username.is_match(&user) {
+        if err_if_fail!(pat_username.is_match(&user)) {
             filter.users.insert(user);
         } else {
-            return Err(regex::Error::Syntax(format!(
-                "'{}' wrong username syntax",
-                user
-            )));
+            return Err(format!("'{}' wrong username syntax", user));
+        }
+    }
+
+    Ok(filter)
+}
+
+pub fn filter_from_domains(domains: Vec<String>) -> Result<impl Filter<Value = str>, String> {
+    let mut filter = FilterDomain::default();
+    let pat_fqdn = err_if_fail!(pattern::pat_fqdn());
+
+    for domain in domains {
+        if err_if_fail!(pat_fqdn.is_match(&domain)) {
+            filter.domains.insert(domain);
+        } else {
+            return Err(format!("'{}' wrong domain syntax", domain));
         }
     }
 
