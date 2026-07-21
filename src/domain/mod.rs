@@ -2,6 +2,7 @@ use std::ffi::{c_char, c_int};
 use std::io::Error;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
+use anyhow::{Result, bail};
 use libc;
 
 use crate::c_utils;
@@ -46,7 +47,7 @@ fn eai_get_err_msg(err: c_int) -> String {
 }
 
 #[allow(dead_code)]
-pub fn get_domain_from_ip(ip: IpAddr) -> Result<String, String> {
+pub fn get_domain_from_ip(ip: IpAddr) -> Result<String> {
     let ip_nullterminated = format!("{}\0", ip.to_string());
     let node = ip_nullterminated.as_ptr() as *const c_char;
     let hints = AddrinfoBuilder::new().flags(libc::AI_NUMERICHOST).build();
@@ -55,7 +56,7 @@ pub fn get_domain_from_ip(ip: IpAddr) -> Result<String, String> {
     let ret = unsafe { libc::getaddrinfo(node, std::ptr::null(), &hints, &mut res.addrinfo) };
 
     if ret != 0 {
-        return Err(eai_get_err_msg(ret));
+        bail!(eai_get_err_msg(ret));
     }
 
     let dret = unsafe { *res.addrinfo };
@@ -74,14 +75,14 @@ pub fn get_domain_from_ip(ip: IpAddr) -> Result<String, String> {
     };
 
     if ret != 0 {
-        return Err(eai_get_err_msg(ret));
+        bail!(eai_get_err_msg(ret));
     }
 
     Ok(c_utils::parse_c_string(host.as_ptr()))
 }
 
 #[allow(dead_code)]
-pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAddr>, String> {
+pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAddr>> {
     let domain_nullterminated = format!("{}\0", domain);
     let node = domain_nullterminated.as_ptr() as *const c_char;
     let hints = AddrinfoBuilder::new()
@@ -97,7 +98,7 @@ pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAdd
     let ret = unsafe { libc::getaddrinfo(node, std::ptr::null(), &hints, &mut res.addrinfo) };
 
     if ret != 0 {
-        return Err(eai_get_err_msg(ret));
+        bail!(eai_get_err_msg(ret));
     }
 
     let mut p = res.addrinfo;
@@ -120,14 +121,14 @@ pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAdd
         };
 
         if ret != 0 {
-            return Err(eai_get_err_msg(ret));
+            bail!(eai_get_err_msg(ret));
         }
 
         let ip_str = c_utils::parse_c_string(host.as_ptr());
         let ip = match dp.ai_family {
-            libc::AF_INET => IpAddr::V4(err_if_fail!(ip_str.parse::<Ipv4Addr>())),
-            libc::AF_INET6 => IpAddr::V6(err_if_fail!(ip_str.parse::<Ipv6Addr>())),
-            _ => return Err(format!("Unsupported address family: {}", dp.ai_family)),
+            libc::AF_INET => IpAddr::V4(ip_str.parse::<Ipv4Addr>()?),
+            libc::AF_INET6 => IpAddr::V6(ip_str.parse::<Ipv6Addr>()?),
+            _ => bail!("Unsupported address family: {}", dp.ai_family),
         };
 
         lookup.push(ip);
@@ -141,40 +142,49 @@ pub fn get_ip_from_domain(domain: &str, ai_family: AiFamily) -> Result<Vec<IpAdd
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::Result;
 
     #[test]
-    fn test_get_domain_from_ip_tp_ipv4_localhost() {
-        let ret = get_domain_from_ip(IpAddr::V4("127.0.0.1".parse::<Ipv4Addr>().unwrap()));
-        assert!(ret.is_ok());
+    fn test_get_domain_from_ip_tp_ipv4_localhost() -> Result<()> {
+        let ret = get_domain_from_ip(IpAddr::V4("127.0.0.1".parse::<Ipv4Addr>()?));
 
-        let domain = ret.unwrap();
-        assert_eq!(domain, "localhost");
+        assert_eq!(ret?, "localhost");
+
+        Ok(())
     }
 
     #[test]
-    fn test_get_domain_from_ip_tn_ipv4_0000() {
-        let ret = get_domain_from_ip(IpAddr::V4("0.0.0.0".parse::<Ipv4Addr>().unwrap()));
-        assert!(ret.is_err());
+    fn test_get_domain_from_ip_tn_ipv4_0000() -> Result<()> {
+        let ret = get_domain_from_ip(IpAddr::V4("0.0.0.0".parse::<Ipv4Addr>()?));
 
-        let err = ret.unwrap_err();
-        assert!(err.contains("EAI_NONAME"));
+        assert!(
+            ret.expect_err("must fail")
+                .to_string()
+                .contains("EAI_NONAME")
+        );
+
+        Ok(())
     }
 
     #[test]
-    fn test_get_domain_from_ip_tp_ipv6_localhost() {
-        let ret = get_domain_from_ip(IpAddr::V6("::1".parse::<Ipv6Addr>().unwrap()));
-        assert!(ret.is_ok());
+    fn test_get_domain_from_ip_tp_ipv6_localhost() -> Result<()> {
+        let ret = get_domain_from_ip(IpAddr::V6("::1".parse::<Ipv6Addr>()?));
 
-        let domain = ret.unwrap();
-        assert!(domain.contains("localhost"));
+        assert!(ret?.contains("localhost"));
+
+        Ok(())
     }
 
     #[test]
-    fn test_get_domain_from_ip_tn_ipv6_any() {
-        let ret = get_domain_from_ip(IpAddr::V6("::".parse::<Ipv6Addr>().unwrap()));
-        assert!(ret.is_err());
+    fn test_get_domain_from_ip_tn_ipv6_any() -> Result<()> {
+        let ret = get_domain_from_ip(IpAddr::V6("::".parse::<Ipv6Addr>()?));
 
-        let err = ret.unwrap_err();
-        assert!(err.contains("EAI_NONAME"));
+        assert!(
+            ret.expect_err("must fail")
+                .to_string()
+                .contains("EAI_NONAME")
+        );
+
+        Ok(())
     }
 }

@@ -2,6 +2,8 @@ use std::collections::HashSet;
 use std::marker::Sized;
 use std::net::Ipv4Addr;
 
+use anyhow::{Result, bail};
+
 use crate::network;
 use crate::pattern;
 
@@ -94,36 +96,36 @@ impl Filter for FilterDomain {
     }
 }
 
-pub fn filter_from_ips(ips: Vec<String>) -> Result<impl Filter<Value = str>, String> {
+pub fn filter_from_ips(ips: Vec<String>) -> Result<impl Filter<Value = str>> {
     let list_ipv4 = network::create_list_ipv4(ips)?;
 
     Ok(FilterIp { list_ipv4 })
 }
 
-pub fn filter_from_users(users: Vec<String>) -> Result<impl Filter<Value = str>, String> {
+pub fn filter_from_users(users: Vec<String>) -> Result<impl Filter<Value = str>> {
     let mut filter = FilterUser::default();
     let pat_username = pattern::pat_username();
 
     for user in users {
-        if err_if_fail!(pat_username.is_match(&user)) {
+        if pat_username.is_match(&user)? {
             filter.users.insert(user);
         } else {
-            return Err(format!("'{}' wrong username syntax", user));
+            bail!("'{}' wrong username syntax", user);
         }
     }
 
     Ok(filter)
 }
 
-pub fn filter_from_domains(domains: Vec<String>) -> Result<impl Filter<Value = str>, String> {
+pub fn filter_from_domains(domains: Vec<String>) -> Result<impl Filter<Value = str>> {
     let mut filter = FilterDomain::default();
     let pat_fqdn = pattern::pat_fqdn();
 
     for domain in domains {
-        if err_if_fail!(pat_fqdn.is_match(&domain)) {
+        if pat_fqdn.is_match(&domain)? {
             filter.domains.insert(domain);
         } else {
-            return Err(format!("'{}' wrong domain syntax", domain));
+            bail!("'{}' wrong domain syntax", domain);
         }
     }
 

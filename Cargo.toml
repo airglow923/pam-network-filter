@@ -12,6 +12,7 @@ crate-type = ["rlib", "cdylib", "staticlib"]
 lto = true
 
 [dependencies]
+anyhow = "1.0.103"
 clap = { version = "4.5.45", features = ["derive"] }
 fancy-regex = "0.16.2"
 ipnet = "2.11.0"
