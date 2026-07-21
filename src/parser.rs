@@ -1,6 +1,7 @@
 use std::ffi::{c_char, c_int};
 
-use clap::{Parser, error::Error, error::ErrorKind};
+use anyhow::{Result, bail};
+use clap::{Parser, error::ErrorKind};
 
 use crate::c_utils;
 use crate::config;
@@ -43,11 +44,11 @@ fn parse_c_args(argc: c_int, argv: *const *const c_char) -> Vec<String> {
     vec
 }
 
-pub fn process_pam_args(argc: c_int, argv: *const *const c_char) -> Result<Cli, Error> {
+pub fn process_pam_args(argc: c_int, argv: *const *const c_char) -> Result<Cli> {
     if argc == 0 {
-        return Err(Error::raw(
+        bail!(clap::Error::raw(
             ErrorKind::MissingRequiredArgument,
-            "no arguments provided",
+            "no arguments provided"
         ));
     }
 
@@ -59,10 +60,12 @@ pub fn process_pam_args(argc: c_int, argv: *const *const c_char) -> Result<Cli, 
 
 #[cfg(test)]
 mod tests {
+    use crate::error;
+
     use super::*;
 
     #[test]
-    fn test_process_pam_args_tn_invalid() {
+    fn test_process_pam_args_tn_invalid() -> Result<()> {
         let argv = [
             c"asdf".as_ptr(),
             c"qwer".as_ptr(),
@@ -70,82 +73,100 @@ mod tests {
             c"qerqwe".as_ptr(),
         ];
 
-        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
+        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr()).expect_err("must fail");
 
-        assert!(ret.is_err());
-        assert_eq!(ret.unwrap_err().kind(), ErrorKind::UnknownArgument);
+        assert!(error::is_underlying::<clap::Error>(&ret));
+        assert_eq!(
+            error::downcast_ref::<clap::Error>(&ret)?.kind(),
+            ErrorKind::UnknownArgument
+        );
+
+        Ok(())
     }
 
     #[test]
-    fn test_process_pam_args_tn_empty() {
+    fn test_process_pam_args_tn_empty() -> Result<()> {
         let argv = [];
 
-        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
+        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr()).expect_err("must fail");
 
-        assert!(ret.is_err());
-        assert_eq!(ret.unwrap_err().kind(), ErrorKind::MissingRequiredArgument);
+        assert!(error::is_underlying::<clap::Error>(&ret));
+        assert_eq!(
+            error::downcast_ref::<clap::Error>(&ret)?.kind(),
+            ErrorKind::MissingRequiredArgument
+        );
+
+        Ok(())
     }
 
     #[test]
-    fn test_process_pam_args_tn_flag_without_hyphens() {
+    fn test_process_pam_args_tn_flag_without_hyphens() -> Result<()> {
         let argv = [c"ip-allow".as_ptr()];
 
-        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
+        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr()).expect_err("must fail");
 
-        assert!(ret.is_err());
-        assert_eq!(ret.unwrap_err().kind(), ErrorKind::UnknownArgument);
+        assert!(error::is_underlying::<clap::Error>(&ret));
+        assert_eq!(
+            error::downcast_ref::<clap::Error>(&ret)?.kind(),
+            ErrorKind::UnknownArgument
+        );
+
+        Ok(())
     }
 
     #[test]
-    fn test_process_pam_args_tn_ip_allow_value_empty() {
+    fn test_process_pam_args_tn_ip_allow_value_empty() -> Result<()> {
         let argv = [c"--ip-allow".as_ptr()];
 
-        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
+        let ret = process_pam_args(argv.len() as c_int, argv.as_ptr()).expect_err("must fail");
 
-        assert!(ret.is_err());
-        assert_eq!(ret.unwrap_err().kind(), ErrorKind::InvalidValue);
+        assert!(error::is_underlying::<clap::Error>(&ret));
+        assert_eq!(
+            error::downcast_ref::<clap::Error>(&ret)?.kind(),
+            ErrorKind::InvalidValue
+        );
+
+        Ok(())
     }
 
     #[test]
-    fn test_process_pam_args_tp_ip_allow_value_string() {
+    fn test_process_pam_args_tp_ip_allow_value_string() -> Result<()> {
         let argv = [c"--ip-allow".as_ptr(), c"asdf".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
-        assert!(ret.is_ok());
-
-        let cli = ret.unwrap();
+        let cli = ret?;
 
         assert_eq!(cli.ip_allow.len(), 1);
         assert_eq!(cli.ip_allow[0].as_str(), "asdf");
         assert_eq!(cli.mac_allow.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
+
+        Ok(())
     }
 
     #[test]
-    fn test_process_pam_args_tp_ip_allow_value_string_with_equal() {
+    fn test_process_pam_args_tp_ip_allow_value_string_with_equal() -> Result<()> {
         let argv = [c"--ip-allow=asdf".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
-        assert!(ret.is_ok());
-
-        let cli = ret.unwrap();
+        let cli = ret?;
 
         assert_eq!(cli.ip_allow.len(), 1);
         assert_eq!(cli.ip_allow[0].as_str(), "asdf");
         assert_eq!(cli.mac_allow.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
+
+        Ok(())
     }
 
     #[test]
-    fn test_process_pam_args_tp_ip_allow_value_comma_separated_string() {
+    fn test_process_pam_args_tp_ip_allow_value_comma_separated_string() -> Result<()> {
         let argv = [c"--ip-allow".as_ptr(), c"asdf,qwer".as_ptr()];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
-        assert!(ret.is_ok());
-
-        let cli = ret.unwrap();
+        let cli = ret?;
         let ip_allow = cli.ip_allow;
 
         assert_eq!(ip_allow.len(), 2);
@@ -155,10 +176,12 @@ mod tests {
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
         assert_eq!(ip_allow.len(), 2);
+
+        Ok(())
     }
 
     #[test]
-    fn test_process_pam_args_tp_ip_allow_multiple_values() {
+    fn test_process_pam_args_tp_ip_allow_multiple_values() -> Result<()> {
         let argv = [
             c"--ip-allow".as_ptr(),
             c"asdf".as_ptr(),
@@ -167,9 +190,7 @@ mod tests {
         ];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
-        assert!(ret.is_ok());
-
-        let cli = ret.unwrap();
+        let cli = ret?;
         let ip_allow = cli.ip_allow;
 
         assert_eq!(ip_allow.len(), 2);
@@ -178,10 +199,12 @@ mod tests {
         assert_eq!(cli.mac_allow.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
+
+        Ok(())
     }
 
     #[test]
-    fn test_process_pam_args_tp_ip_allow_multiple_values_mixed_comma_separated() {
+    fn test_process_pam_args_tp_ip_allow_multiple_values_mixed_comma_separated() -> Result<()> {
         let argv = [
             c"--ip-allow".as_ptr(),
             c"asdf,qwer".as_ptr(),
@@ -190,9 +213,7 @@ mod tests {
         ];
 
         let ret = process_pam_args(argv.len() as c_int, argv.as_ptr());
-        assert!(ret.is_ok());
-
-        let cli = ret.unwrap();
+        let cli = ret?;
         let ip_allow = cli.ip_allow;
 
         assert_eq!(ip_allow.len(), 3);
@@ -202,5 +223,7 @@ mod tests {
         assert_eq!(cli.mac_allow.len(), 0);
         assert_eq!(cli.port_allow.len(), 0);
         assert_eq!(cli.user_allow.len(), 0);
+
+        Ok(())
     }
 }

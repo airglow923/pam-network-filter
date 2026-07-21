@@ -144,6 +144,8 @@ mod tests {
     use super::*;
     use anyhow::Result;
 
+    use crate::error;
+
     #[test]
     fn test_get_domain_from_ip_tp_ipv4_localhost() -> Result<()> {
         let ret = get_domain_from_ip(IpAddr::V4("127.0.0.1".parse::<Ipv4Addr>()?));
@@ -155,13 +157,11 @@ mod tests {
 
     #[test]
     fn test_get_domain_from_ip_tn_ipv4_0000() -> Result<()> {
-        let ret = get_domain_from_ip(IpAddr::V4("0.0.0.0".parse::<Ipv4Addr>()?));
+        let ret =
+            get_domain_from_ip(IpAddr::V4("0.0.0.0".parse::<Ipv4Addr>()?)).expect_err("must fail");
 
-        assert!(
-            ret.expect_err("must fail")
-                .to_string()
-                .contains("EAI_NONAME")
-        );
+        assert!(error::is_underlying::<String>(&ret));
+        assert!(ret.to_string().contains("EAI_NONAME"));
 
         Ok(())
     }
@@ -177,13 +177,10 @@ mod tests {
 
     #[test]
     fn test_get_domain_from_ip_tn_ipv6_any() -> Result<()> {
-        let ret = get_domain_from_ip(IpAddr::V6("::".parse::<Ipv6Addr>()?));
+        let ret = get_domain_from_ip(IpAddr::V6("::".parse::<Ipv6Addr>()?)).expect_err("must fail");
 
-        assert!(
-            ret.expect_err("must fail")
-                .to_string()
-                .contains("EAI_NONAME")
-        );
+        assert!(error::is_underlying::<String>(&ret));
+        assert!(ret.to_string().contains("EAI_NONAME"));
 
         Ok(())
     }

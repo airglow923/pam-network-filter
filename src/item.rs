@@ -1,5 +1,6 @@
 use std::ffi::{c_char, c_int, c_void};
 
+use anyhow::{Result, bail};
 use libc;
 
 use crate::c_utils;
@@ -49,7 +50,7 @@ fn pam_item_log_err_and_throw(
     pamh: *const pam::pam_handle_t,
     val: c_int,
     item_type: c_int,
-) -> Result<(), String> {
+) -> Result<()> {
     let msg = format!(
         "item type: '{}', {}",
         pam_item_type_to_string(item_type),
@@ -62,12 +63,12 @@ fn pam_item_log_err_and_throw(
         _ => log::pam_syslog(pamh, libc::LOG_ERR, &msg),
     }
 
-    Err(msg)
+    bail!(msg)
 }
 
-pub fn get_pam_connection(pamh: *const pam::pam_handle_t) -> Result<Connection, String> {
+pub fn get_pam_connection(pamh: *const pam::pam_handle_t) -> Result<Connection> {
     if pamh.is_null() {
-        return Err("null pamh passed".to_string());
+        bail!("null pamh passed");
     }
 
     let mut item: *const c_void = std::ptr::null();
@@ -112,6 +113,7 @@ mod tests {
 
     use super::*;
 
+    use anyhow::Result;
     use std::os::raw::c_void;
 
     #[test]
@@ -199,9 +201,12 @@ mod tests {
     }
 
     #[test]
-    fn test_get_pam_connection_tn_null() {
+    fn test_get_pam_connection_tn_null() -> Result<()> {
         let pamh: *mut pam::pam_handle_t = std::ptr::null_mut();
-        let ret = get_pam_connection(pamh);
-        assert!(ret.is_err());
+        let ret = get_pam_connection(pamh).expect_err("must fail");
+
+        assert_eq!(ret.to_string(), "null pamh passed");
+
+        Ok(())
     }
 }
