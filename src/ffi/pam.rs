@@ -6,12 +6,12 @@ include!(concat!(env!("OUT_DIR"), "/pam.rs"));
 
 use std::ffi::{c_char, c_int};
 
-type PamFunction = unsafe extern "C" fn(
-    pamh: *mut pam_handle_t,
-    flags: c_int,
-    argc: c_int,
-    argv: *const *const c_char,
-) -> c_int;
+use crate::ffi::types::argv_t;
+
+pub type pamh_t = *mut pam_handle_t;
+
+type PamFunction =
+    unsafe extern "C" fn(pamh: pamh_t, flags: c_int, argc: c_int, argv: argv_t) -> c_int;
 
 #[repr(C)]
 pub struct pam_module {

@@ -35,9 +35,7 @@ impl Filter for FilterIp {
     fn contains(&self, rhost: &str) -> bool {
         let ip = match rhost.parse::<Ipv4Addr>() {
             Ok(x) => x,
-            Err(_) => {
-                return false;
-            }
+            Err(_) => return false,
         };
 
         if self.list_ipv4.ips.contains(ip.to_bits()) {
@@ -96,13 +94,13 @@ impl Filter for FilterDomain {
     }
 }
 
-pub fn filter_from_ips(ips: Vec<String>) -> Result<impl Filter<Value = str>> {
+pub fn filter_from_ips(ips: Vec<String>) -> Result<FilterIp> {
     let list_ipv4 = network::create_list_ipv4(ips)?;
 
     Ok(FilterIp { list_ipv4 })
 }
 
-pub fn filter_from_users(users: Vec<String>) -> Result<impl Filter<Value = str>> {
+pub fn filter_from_users(users: Vec<String>) -> Result<FilterUser> {
     let mut filter = FilterUser::default();
     let pat_username = pattern::pat_username();
 
@@ -117,7 +115,7 @@ pub fn filter_from_users(users: Vec<String>) -> Result<impl Filter<Value = str>>
     Ok(filter)
 }
 
-pub fn filter_from_domains(domains: Vec<String>) -> Result<impl Filter<Value = str>> {
+pub fn filter_from_domains(domains: Vec<String>) -> Result<FilterDomain> {
     let mut filter = FilterDomain::default();
     let pat_fqdn = pattern::pat_fqdn();
 
